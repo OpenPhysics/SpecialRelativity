@@ -22,23 +22,40 @@ import "./brand.js";
 import { onReadyToLaunch, PreferencesModel, Sim } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { StringManager } from "./i18n/StringManager.js";
-import { SimPreferencesModel } from "./preferences/SimPreferencesModel.js";
-import { SimPreferencesNode } from "./preferences/SimPreferencesNode.js";
-import SimColors from "./SimColors.js";
-import { SimScreen } from "./sim-screen/SimScreen.js";
+import { LightClockScreen } from "./light-clock/LightClockScreen.js";
+import { SpecialRelativityPreferencesModel } from "./preferences/SpecialRelativityPreferencesModel.js";
+import { SpecialRelativityPreferencesNode } from "./preferences/SpecialRelativityPreferencesNode.js";
+import { RelativisticDopplerScreen } from "./relativistic-doppler/RelativisticDopplerScreen.js";
+import SpecialRelativityColors from "./SpecialRelativityColors.js";
+import { SpacetimeDiagramScreen } from "./spacetime/SpacetimeDiagramScreen.js";
+import { TwinParadoxScreen } from "./twin-paradox/TwinParadoxScreen.js";
 
 onReadyToLaunch(() => {
   const stringManager = StringManager.getInstance();
 
-  // Simulation-specific preferences; initial values come from simQueryParameters.
-  const simPreferences = new SimPreferencesModel(Tandem.ROOT.createTandem("preferences"));
+  // Simulation-specific preferences; initial values come from specialRelativityQueryParameters.
+  const simPreferences = new SpecialRelativityPreferencesModel(Tandem.ROOT.createTandem("preferences"));
 
   const screens = [
-    new SimScreen({
-      // The screen name Property updates automatically when the locale changes
-      name: stringManager.getScreenNames().simStringProperty,
-      tandem: Tandem.ROOT.createTandem("simScreen"),
-      backgroundColorProperty: SimColors.backgroundColorProperty,
+    new LightClockScreen(simPreferences, {
+      name: stringManager.getScreenNames().lightClockStringProperty,
+      tandem: Tandem.ROOT.createTandem("lightClockScreen"),
+      backgroundColorProperty: SpecialRelativityColors.backgroundColorProperty,
+    }),
+    new SpacetimeDiagramScreen(simPreferences, {
+      name: stringManager.getScreenNames().spacetimeStringProperty,
+      tandem: Tandem.ROOT.createTandem("spacetimeScreen"),
+      backgroundColorProperty: SpecialRelativityColors.backgroundColorProperty,
+    }),
+    new TwinParadoxScreen(simPreferences, {
+      name: stringManager.getScreenNames().twinParadoxStringProperty,
+      tandem: Tandem.ROOT.createTandem("twinParadoxScreen"),
+      backgroundColorProperty: SpecialRelativityColors.backgroundColorProperty,
+    }),
+    new RelativisticDopplerScreen(simPreferences, {
+      name: stringManager.getScreenNames().relativisticDopplerStringProperty,
+      tandem: Tandem.ROOT.createTandem("relativisticDopplerScreen"),
+      backgroundColorProperty: SpecialRelativityColors.backgroundColorProperty,
     }),
   ];
 
@@ -53,7 +70,7 @@ onReadyToLaunch(() => {
       simulationOptions: {
         customPreferences: [
           {
-            createContent: (tandem: Tandem) => new SimPreferencesNode(simPreferences, tandem),
+            createContent: (tandem: Tandem) => new SpecialRelativityPreferencesNode(simPreferences, tandem),
           },
         ],
       },

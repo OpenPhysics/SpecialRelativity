@@ -8,7 +8,12 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { SpecialRelativityModel } from "../src/common/model/SpecialRelativityModel.js";
 import { TimeModel } from "../src/common/TimeModel.js";
+import { LightClockModel } from "../src/light-clock/model/LightClockModel.js";
+import { RelativisticDopplerModel } from "../src/relativistic-doppler/model/RelativisticDopplerModel.js";
+import { SpacetimeDiagramModel } from "../src/spacetime/model/SpacetimeDiagramModel.js";
+import { TwinParadoxModel } from "../src/twin-paradox/model/TwinParadoxModel.js";
 
 /**
  * Force garbage collection with multiple passes. When `earlyExitRef` is supplied
@@ -35,6 +40,62 @@ function createAndDisposeTimeModel(): WeakRef<object> {
   return ref;
 }
 
+/**
+ * Every disposable model in the sim, each behind its own function boundary. The
+ * screen models are the ones worth watching: they each build a handful of
+ * DerivedProperties over their sub-models, and a DerivedProperty that is not
+ * disposed keeps a listener on its dependencies — which keeps the whole graph
+ * alive.
+ */
+const DISPOSABLE_MODELS: { readonly name: string; readonly createAndDispose: () => WeakRef<object> }[] = [
+  { name: "TimeModel", createAndDispose: createAndDisposeTimeModel },
+  {
+    name: "SpecialRelativityModel",
+    createAndDispose: () => {
+      const model = new SpecialRelativityModel();
+      const ref = new WeakRef<object>(model);
+      model.dispose();
+      return ref;
+    },
+  },
+  {
+    name: "LightClockModel",
+    createAndDispose: () => {
+      const model = new LightClockModel();
+      const ref = new WeakRef<object>(model);
+      model.dispose();
+      return ref;
+    },
+  },
+  {
+    name: "SpacetimeDiagramModel",
+    createAndDispose: () => {
+      const model = new SpacetimeDiagramModel();
+      const ref = new WeakRef<object>(model);
+      model.dispose();
+      return ref;
+    },
+  },
+  {
+    name: "TwinParadoxModel",
+    createAndDispose: () => {
+      const model = new TwinParadoxModel();
+      const ref = new WeakRef<object>(model);
+      model.dispose();
+      return ref;
+    },
+  },
+  {
+    name: "RelativisticDopplerModel",
+    createAndDispose: () => {
+      const model = new RelativisticDopplerModel();
+      const ref = new WeakRef<object>(model);
+      model.dispose();
+      return ref;
+    },
+  },
+];
+
 describe("Memory leak regression", () => {
   it("global.gc is available (--expose-gc)", () => {
     expect(globalThis.gc).toBeDefined();
@@ -46,11 +107,13 @@ describe("Memory leak regression", () => {
     expect(ref.deref()).toBeUndefined();
   });
 
-  it("TimeModel is collected after dispose", async () => {
-    const ref = createAndDisposeTimeModel();
-    await forceGC(ref);
-    expect(ref.deref()).toBeUndefined();
-  });
+  for (const { name, createAndDispose } of DISPOSABLE_MODELS) {
+    it(`${name} is collected after dispose`, async () => {
+      const ref = createAndDispose();
+      await forceGC(ref);
+      expect(ref.deref()).toBeUndefined();
+    });
+  }
 
   it("double dispose() does not throw", () => {
     const model = new TimeModel();

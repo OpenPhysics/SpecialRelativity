@@ -77,28 +77,67 @@ export class StringManager {
    * Each property updates automatically when the locale changes.
    */
   public getScreenNames(): {
-    readonly simStringProperty: ReadOnlyProperty<string>;
+    readonly lightClockStringProperty: ReadOnlyProperty<string>;
+    readonly spacetimeStringProperty: ReadOnlyProperty<string>;
+    readonly twinParadoxStringProperty: ReadOnlyProperty<string>;
+    readonly relativisticDopplerStringProperty: ReadOnlyProperty<string>;
   } {
     return {
-      simStringProperty: stringProperties.screens.simStringProperty,
+      lightClockStringProperty: stringProperties.screens.lightClockStringProperty,
+      spacetimeStringProperty: stringProperties.screens.spacetimeStringProperty,
+      twinParadoxStringProperty: stringProperties.screens.twinParadoxStringProperty,
+      relativisticDopplerStringProperty: stringProperties.screens.relativisticDopplerStringProperty,
     };
   }
 
-  /**
-   * Accessibility (Interactive Description) StringProperties.
-   *
-   * Returns the reactive `a11y` string tree used by the parallel DOM:
-   *   - `screenSummary.*` — play-area / control-area overview and an interaction
-   *     hint, read by `SimScreenSummaryContent`.
-   *   - `currentDetails` — a paragraph describing the simulation's current state.
-   *     In a real sim, derive a live version from model Properties (see
-   *     LunarLander's ScreenSummaryContent for the canonical pattern).
-   *
-   * Add `accessibleName` / `accessibleHelpText` strings for individual controls
-   * to the `a11y` group too, then read them through this same nested tree.
-   */
-  public getA11yStrings() {
-    return stringProperties.a11y;
+  /** Unit patterns ("{{value}} ls", "{{value}} s", …) shared by every readout. */
+  public getUnits() {
+    return stringProperties.units;
+  }
+
+  /** Labels used on more than one screen: β and γ, frame names, axis titles. */
+  public getCommon() {
+    return stringProperties.common;
+  }
+
+  /** Visible labels for the Light Clock screen. */
+  public getLightClockStrings() {
+    return stringProperties.lightClock;
+  }
+
+  /** Visible labels for the Spacetime Diagram screen. */
+  public getSpacetimeDiagramStrings() {
+    return stringProperties.spacetime;
+  }
+
+  /** Visible labels for the Twin Paradox screen. */
+  public getTwinParadoxStrings() {
+    return stringProperties.twinParadox;
+  }
+
+  /** Visible labels for the Relativistic Doppler screen. */
+  public getRelativisticDopplerStrings() {
+    return stringProperties.relativisticDoppler;
+  }
+
+  /** Accessibility strings for the Light Clock screen. */
+  public getLightClockA11yStrings() {
+    return stringProperties.a11y.lightClock;
+  }
+
+  /** Accessibility strings for the Spacetime Diagram screen. */
+  public getSpacetimeDiagramA11yStrings() {
+    return stringProperties.a11y.spacetime;
+  }
+
+  /** Accessibility strings for the Twin Paradox screen. */
+  public getTwinParadoxA11yStrings() {
+    return stringProperties.a11y.twinParadox;
+  }
+
+  /** Accessibility strings for the Relativistic Doppler screen. */
+  public getRelativisticDopplerA11yStrings() {
+    return stringProperties.a11y.relativisticDoppler;
   }
 
   /**

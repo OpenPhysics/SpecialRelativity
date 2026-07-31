@@ -152,10 +152,10 @@ export default defineConfig(({ mode }) => {
             registerType: "autoUpdate",
             includeAssets: ["favicon.ico", "icons/apple-touch-icon.png"],
             manifest: {
-              name: "SceneryStack Template",
+              name: "Special Relativity",
               // biome-ignore lint/style/useNamingConvention: Web App Manifest spec requires snake_case keys
-              short_name: "SimTemplate",
-              description: "A SceneryStack simulation template for one or N screens",
+              short_name: "SpecialRelativity",
+              description: "A SceneryStack simulation: Special Relativity",
               // biome-ignore lint/style/useNamingConvention: Web App Manifest spec requires snake_case keys
               theme_color: "#1a1a2e",
               // biome-ignore lint/style/useNamingConvention: Web App Manifest spec requires snake_case keys

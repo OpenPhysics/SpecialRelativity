@@ -1,21 +1,168 @@
 {
-  "title": "Modèle de Simulation",
+  "title": "Relativité restreinte",
   "screens": {
-    "sim": "Sim"
+    "lightClock": "Horloge à lumière",
+    "spacetime": "Diagramme d'espace-temps",
+    "twinParadox": "Paradoxe des jumeaux",
+    "relativisticDoppler": "Doppler relativiste"
+  },
+  "units": {
+    "lightSeconds": "{{value}} sl",
+    "lightSecondsSquared": "{{value}} sl²",
+    "seconds": "{{value}} s",
+    "nanometers": "{{value}} nm",
+    "beta": "{{value}} c"
+  },
+  "common": {
+    "velocity": "Vitesse relative",
+    "gamma": "Facteur de Lorentz γ",
+    "rapidity": "Rapidité η",
+    "gammaValue": "γ = {{value}}",
+    "betaValue": "β = {{value}}",
+    "labFrame": "Référentiel du laboratoire",
+    "movingFrame": "Référentiel mobile",
+    "xAxis": "x (secondes-lumière)",
+    "ctAxis": "ct (secondes-lumière)",
+    "primedXAxis": "x′",
+    "primedCtAxis": "ct′"
+  },
+  "lightClock": {
+    "restClock": "Au repos dans le laboratoire",
+    "movingClock": "Passant à β",
+    "labTime": "Horloge du laboratoire",
+    "properTime": "Horloge mobile",
+    "restTicks": "Tics au repos",
+    "movingTicks": "Tics en mouvement",
+    "showTrail": "Trajet du photon",
+    "takeaway": "Les deux photons vont à c. Celui qui se déplace a simplement plus de chemin à parcourir : son horloge bat donc plus lentement d'un facteur γ."
+  },
+  "spacetime": {
+    "eventA": "A",
+    "eventB": "B",
+    "showLightCone": "Cône de lumière",
+    "shadeLightCone": "Ombrer le futur et le passé",
+    "showPrimedFrame": "Axes du référentiel mobile",
+    "showPrimedGrid": "Grille du référentiel mobile",
+    "showSimultaneity": "Ligne de simultanéité",
+    "showHyperbolas": "Hyperboles invariantes",
+    "boostToB": "Passer au référentiel de B",
+    "eventsHeading": "Événements",
+    "separation": "Séparation",
+    "timelike": "De genre temps",
+    "lightlike": "De genre lumière",
+    "spacelike": "De genre espace",
+    "interval": "Intervalle s²",
+    "order": "Ordre",
+    "aFirst": "A se produit en premier",
+    "bFirst": "B se produit en premier",
+    "simultaneous": "A et B sont simultanés",
+    "orderAgreed": "Tous les référentiels s'accordent sur cet ordre.",
+    "orderDisputed": "Changez β et l'ordre s'inverse : aucun des deux événements ne cause l'autre."
+  },
+  "twinParadox": {
+    "turnaround": "Demi-tour",
+    "earthTwin": "Jumeau sédentaire",
+    "travellerTwin": "Jumeau voyageur",
+    "earthClock": "Horloge sur Terre",
+    "travellerClock": "Horloge du voyageur",
+    "difference": "Écart",
+    "outboundSpeed": "Vitesse à l'aller",
+    "showSimultaneity": "Le « maintenant » du voyageur",
+    "playJourney": "Lancer le voyage",
+    "skippedLabel": "Sauté au demi-tour",
+    "takeaway": "C'est le demi-tour qui brise la symétrie : à cet instant, le « maintenant » du voyageur sur Terre fait un bond en avant.",
+    "dragHint": "Faites glisser l'événement du demi-tour pour modifier le voyage."
+  },
+  "relativisticDoppler": {
+    "source": "Source",
+    "observer": "Observateur",
+    "emittedWavelength": "Longueur d'onde émise",
+    "observedWavelength": "Observée",
+    "dopplerFactor": "Facteur Doppler D",
+    "relativeBrightness": "Éclat relatif",
+    "showWavefronts": "Fronts d'onde",
+    "showBeaming": "Lobe de focalisation",
+    "approaching": "En approche : décalée vers le bleu",
+    "receding": "En éloignement : décalée vers le rouge",
+    "transverse": "Transversale : décalée vers le rouge par γ seul",
+    "outsideVisible": "hors de la bande visible",
+    "takeaway": "Même vue de côté, sans approche ni éloignement, la lumière est décalée vers le rouge d'un facteur γ."
   },
   "a11y": {
-    "screenSummary": {
-      "playArea": "La zone de jeu affiche le contenu principal de la simulation.",
-      "controlArea": "La zone de contrôle comporte un bouton Tout réinitialiser qui ramène la simulation à son état initial.",
-      "interactionHint": "Explorez la simulation en interagissant avec ses commandes."
+    "lightClock": {
+      "screenSummary": {
+        "playArea": "La zone de jeu montre deux horloges à lumière identiques. Celle du haut est au repos dans le laboratoire ; celle du bas passe à une fraction réglable de la vitesse de la lumière, son photon traçant un zigzag.",
+        "controlArea": "La zone de contrôle comporte un curseur de vitesse relative, une case pour le trajet du photon, des commandes de temps et un bouton Tout réinitialiser qui ramène la simulation à son état initial.",
+        "interactionHint": "Modifiez la vitesse relative et regardez les deux comptes de tics s'écarter."
+      },
+      "currentDetails": "À une vitesse relative de {{beta}} fois la vitesse de la lumière, gamma vaut {{gamma}}. L'horloge du laboratoire a compté {{restTicks}} tics et l'horloge mobile {{movingTicks}}.",
+      "controls": {
+        "velocity": "Vitesse relative",
+        "velocityHelp": "Vitesse de l'horloge à lumière mobile, en fraction de la vitesse de la lumière.",
+        "showTrail": "Trajet du photon",
+        "showTrailHelp": "Afficher le zigzag que le photon mobile trace à travers le laboratoire."
+      }
     },
-    "currentDetails": "La simulation est dans son état initial.",
-    "controls": {
-      "exampleControl": "Contrôle d'exemple"
+    "spacetime": {
+      "screenSummary": {
+        "playArea": "La zone de jeu montre un diagramme d'espace-temps, l'espace en abscisse et le temps en ordonnée. On y trouve deux événements déplaçables, A et B, ainsi que le cône de lumière passant par l'origine et les axes d'un second référentiel se déplaçant à une vitesse réglable.",
+        "controlArea": "La zone de contrôle comporte un curseur de vitesse relative, des cases pour le cône de lumière, le référentiel mobile, les lignes de simultanéité et les hyperboles invariantes, un bouton qui passe au référentiel de l'événement B, et un bouton Tout réinitialiser.",
+        "interactionHint": "Déplacez un événement hors du cône de lumière, puis balayez la vitesse pour voir changer lequel se produit en premier."
+      },
+      "currentDetails": "L'événement A est en x {{ax}}, ct {{act}} secondes-lumière ; l'événement B est en x {{bx}}, ct {{bct}}. Leur séparation est {{separation}} avec un intervalle au carré de {{interval}}. À une vitesse relative de {{beta}} fois la vitesse de la lumière, {{order}}.",
+      "controls": {
+        "velocity": "Vitesse relative",
+        "velocityHelp": "Vitesse du second référentiel, en fraction de la vitesse de la lumière. Ses axes se rapprochent du cône de lumière à mesure qu'elle augmente.",
+        "eventA": "Événement A",
+        "eventAHelp": "Faites glisser pour déplacer l'événement A dans l'espace et le temps.",
+        "eventB": "Événement B",
+        "eventBHelp": "Faites glisser pour déplacer l'événement B dans l'espace et le temps.",
+        "showLightCone": "Cône de lumière",
+        "shadeLightCone": "Ombrer le futur et le passé",
+        "showPrimedFrame": "Axes du référentiel mobile",
+        "showPrimedGrid": "Grille du référentiel mobile",
+        "showSimultaneity": "Ligne de simultanéité",
+        "showHyperbolas": "Hyperboles invariantes",
+        "boostToB": "Passer au référentiel de l'événement B",
+        "boostToBHelp": "Amène la vitesse relative à la valeur qui met l'événement B au repos, si elle existe."
+      }
+    },
+    "twinParadox": {
+      "screenSummary": {
+        "playArea": "La zone de jeu montre un diagramme d'espace-temps portant deux lignes d'univers qui vont du même départ à la même arrivée : la verticale du jumeau sédentaire et le trajet aller-retour du jumeau voyageur passant par un événement de demi-tour déplaçable.",
+        "controlArea": "La zone de contrôle comporte une case pour le « maintenant » du voyageur, des commandes de temps du voyage et un bouton Tout réinitialiser qui ramène la simulation à son état initial.",
+        "interactionHint": "Déplacez l'événement du demi-tour, lancez le voyage et comparez les deux horloges."
+      },
+      "currentDetails": "Le demi-tour est en x {{x}}, ct {{ct}} secondes-lumière, soit une vitesse à l'aller de {{beta}} fois la vitesse de la lumière avec gamma {{gamma}}. Aux retrouvailles, l'horloge terrestre indique {{earth}} secondes et celle du voyageur {{traveller}}.",
+      "controls": {
+        "turnaround": "Événement du demi-tour",
+        "turnaroundHelp": "Faites glisser pour changer la distance et la vitesse du jumeau voyageur.",
+        "showSimultaneity": "Le « maintenant » du voyageur",
+        "showSimultaneityHelp": "Afficher quel instant sur Terre le voyageur appelle « maintenant »."
+      }
+    },
+    "relativisticDoppler": {
+      "screenSummary": {
+        "playArea": "La zone de jeu montre une source lumineuse qui passe devant un observateur immobile en émettant des fronts d'onde qui s'étendent. La couleur reçue passe du bleu au rouge à mesure que la source s'éloigne, et un lobe montre comment son éclat est concentré vers l'avant.",
+        "controlArea": "La zone de contrôle comporte un curseur de vitesse de la source, un curseur de longueur d'onde émise, des cases pour les fronts d'onde et le lobe, des commandes de temps et un bouton Tout réinitialiser.",
+        "interactionHint": "Choisissez une vitesse élevée et regardez la couleur reçue parcourir le spectre au passage de la source."
+      },
+      "currentDetails": "La source se déplace à {{beta}} fois la vitesse de la lumière et émet {{emitted}} nanomètres. L'observateur reçoit {{observed}} nanomètres, soit un facteur Doppler de {{doppler}} et un éclat relatif de {{brightness}}.",
+      "controls": {
+        "velocity": "Vitesse de la source",
+        "velocityHelp": "Vitesse de la source lumineuse, en fraction de la vitesse de la lumière.",
+        "wavelength": "Longueur d'onde émise",
+        "wavelengthHelp": "Longueur d'onde que la source émet dans son propre référentiel au repos, en nanomètres.",
+        "showWavefronts": "Fronts d'onde",
+        "showBeaming": "Lobe de focalisation"
+      }
     }
   },
   "preferences": {
     "title": "Simulation",
-    "exampleToggle": "Exemple de bascule"
+    "showRapidity": "Afficher la rapidité",
+    "showRapidityDescription": "Ajoute la rapidité η = artanh β à côté de la valeur de γ. La rapidité s'additionne lorsqu'on compose des transformations, ce que β ne fait pas.",
+    "shadeLightCone": "Ombrer le cône de lumière par défaut",
+    "shadeLightConeDescription": "Démarre les écrans du diagramme d'espace-temps et du paradoxe des jumeaux avec le futur et le passé causals déjà ombrés."
   }
 }

@@ -1,21 +1,168 @@
 {
-  "title": "Plantilla de Simulación",
+  "title": "Relatividad Especial",
   "screens": {
-    "sim": "Sim"
+    "lightClock": "Reloj de luz",
+    "spacetime": "Diagrama de espacio-tiempo",
+    "twinParadox": "Paradoja de los gemelos",
+    "relativisticDoppler": "Doppler relativista"
+  },
+  "units": {
+    "lightSeconds": "{{value}} sl",
+    "lightSecondsSquared": "{{value}} sl²",
+    "seconds": "{{value}} s",
+    "nanometers": "{{value}} nm",
+    "beta": "{{value}} c"
+  },
+  "common": {
+    "velocity": "Velocidad relativa",
+    "gamma": "Factor de Lorentz γ",
+    "rapidity": "Rapidez η",
+    "gammaValue": "γ = {{value}}",
+    "betaValue": "β = {{value}}",
+    "labFrame": "Sistema del laboratorio",
+    "movingFrame": "Sistema en movimiento",
+    "xAxis": "x (segundos luz)",
+    "ctAxis": "ct (segundos luz)",
+    "primedXAxis": "x′",
+    "primedCtAxis": "ct′"
+  },
+  "lightClock": {
+    "restClock": "En reposo en el laboratorio",
+    "movingClock": "Pasando a β",
+    "labTime": "Reloj del laboratorio",
+    "properTime": "Reloj en movimiento",
+    "restTicks": "Tics en reposo",
+    "movingTicks": "Tics en movimiento",
+    "showTrail": "Trayectoria del fotón",
+    "takeaway": "Ambos fotones viajan a c. El que se mueve simplemente tiene más camino que recorrer, así que su reloj avanza más lento por un factor γ."
+  },
+  "spacetime": {
+    "eventA": "A",
+    "eventB": "B",
+    "showLightCone": "Cono de luz",
+    "shadeLightCone": "Sombrear futuro y pasado",
+    "showPrimedFrame": "Ejes del sistema móvil",
+    "showPrimedGrid": "Rejilla del sistema móvil",
+    "showSimultaneity": "Línea de simultaneidad",
+    "showHyperbolas": "Hipérbolas invariantes",
+    "boostToB": "Cambiar al sistema de B",
+    "eventsHeading": "Sucesos",
+    "separation": "Separación",
+    "timelike": "De tipo tiempo",
+    "lightlike": "De tipo luz",
+    "spacelike": "De tipo espacio",
+    "interval": "Intervalo s²",
+    "order": "Orden",
+    "aFirst": "A ocurre primero",
+    "bFirst": "B ocurre primero",
+    "simultaneous": "A y B son simultáneos",
+    "orderAgreed": "Todos los sistemas coinciden en este orden.",
+    "orderDisputed": "Cambia β y el orden se invierte: ninguno de los sucesos causa el otro."
+  },
+  "twinParadox": {
+    "turnaround": "Giro",
+    "earthTwin": "Gemelo que se queda",
+    "travellerTwin": "Gemelo viajero",
+    "earthClock": "Reloj en la Tierra",
+    "travellerClock": "Reloj del viajero",
+    "difference": "Diferencia",
+    "outboundSpeed": "Velocidad de ida",
+    "showSimultaneity": "El «ahora» del viajero",
+    "playJourney": "Reproducir el viaje",
+    "skippedLabel": "Saltado en el giro",
+    "takeaway": "El giro es lo que rompe la simetría: en ese instante el «ahora» del viajero en la Tierra da un salto hacia delante.",
+    "dragHint": "Arrastra el suceso del giro para cambiar el viaje."
+  },
+  "relativisticDoppler": {
+    "source": "Fuente",
+    "observer": "Observador",
+    "emittedWavelength": "Longitud de onda emitida",
+    "observedWavelength": "Observada",
+    "dopplerFactor": "Factor Doppler D",
+    "relativeBrightness": "Brillo relativo",
+    "showWavefronts": "Frentes de onda",
+    "showBeaming": "Lóbulo de enfoque",
+    "approaching": "Acercándose: desplazada al azul",
+    "receding": "Alejándose: desplazada al rojo",
+    "transverse": "Transversal: desplazada al rojo solo por γ",
+    "outsideVisible": "fuera de la banda visible",
+    "takeaway": "Incluso justo de lado, sin acercarse ni alejarse, la luz se desplaza al rojo por un factor γ."
   },
   "a11y": {
-    "screenSummary": {
-      "playArea": "El área de juego muestra el contenido principal de la simulación.",
-      "controlArea": "El área de control tiene un botón Restablecer todo que devuelve la simulación a su estado inicial.",
-      "interactionHint": "Explora la simulación interactuando con sus controles."
+    "lightClock": {
+      "screenSummary": {
+        "playArea": "El área de juego muestra dos relojes de luz idénticos. El superior está en reposo en el laboratorio; el inferior pasa a una fracción ajustable de la velocidad de la luz, y su fotón traza un zigzag.",
+        "controlArea": "El área de control tiene un control deslizante de velocidad relativa, una casilla para la trayectoria del fotón, controles de tiempo y un botón Reiniciar todo que devuelve la simulación a su estado inicial.",
+        "interactionHint": "Cambia la velocidad relativa y observa cómo se separan las dos cuentas de tics."
+      },
+      "currentDetails": "A una velocidad relativa de {{beta}} veces la velocidad de la luz, gamma vale {{gamma}}. El reloj del laboratorio ha contado {{restTicks}} tics y el reloj en movimiento {{movingTicks}}.",
+      "controls": {
+        "velocity": "Velocidad relativa",
+        "velocityHelp": "Velocidad del reloj de luz en movimiento, como fracción de la velocidad de la luz.",
+        "showTrail": "Trayectoria del fotón",
+        "showTrailHelp": "Muestra el zigzag que el fotón en movimiento traza por el laboratorio."
+      }
     },
-    "currentDetails": "La simulación está en su estado inicial.",
-    "controls": {
-      "exampleControl": "Control de ejemplo"
+    "spacetime": {
+      "screenSummary": {
+        "playArea": "El área de juego muestra un diagrama de espacio-tiempo con el espacio en horizontal y el tiempo en vertical. Sobre él hay dos sucesos arrastrables, A y B, junto con el cono de luz que pasa por el origen y los ejes de un segundo sistema que se mueve a una velocidad ajustable.",
+        "controlArea": "El área de control tiene un control deslizante de velocidad relativa, casillas para el cono de luz, el sistema móvil, las líneas de simultaneidad y las hipérbolas invariantes, un botón que cambia al sistema del suceso B y un botón Reiniciar todo.",
+        "interactionHint": "Arrastra un suceso fuera del cono de luz y luego recorre la velocidad para ver cómo cambia cuál ocurre primero."
+      },
+      "currentDetails": "El suceso A está en x {{ax}}, ct {{act}} segundos luz; el suceso B está en x {{bx}}, ct {{bct}}. Su separación es {{separation}} con intervalo al cuadrado {{interval}}. A una velocidad relativa de {{beta}} veces la velocidad de la luz, {{order}}.",
+      "controls": {
+        "velocity": "Velocidad relativa",
+        "velocityHelp": "Velocidad del segundo sistema, como fracción de la velocidad de la luz. Sus ejes se inclinan hacia el cono de luz a medida que aumenta.",
+        "eventA": "Suceso A",
+        "eventAHelp": "Arrastra para mover el suceso A por el espacio y el tiempo.",
+        "eventB": "Suceso B",
+        "eventBHelp": "Arrastra para mover el suceso B por el espacio y el tiempo.",
+        "showLightCone": "Cono de luz",
+        "shadeLightCone": "Sombrear futuro y pasado",
+        "showPrimedFrame": "Ejes del sistema móvil",
+        "showPrimedGrid": "Rejilla del sistema móvil",
+        "showSimultaneity": "Línea de simultaneidad",
+        "showHyperbolas": "Hipérbolas invariantes",
+        "boostToB": "Cambiar al sistema del suceso B",
+        "boostToBHelp": "Ajusta la velocidad relativa al valor que deja al suceso B en reposo, si existe."
+      }
+    },
+    "twinParadox": {
+      "screenSummary": {
+        "playArea": "El área de juego muestra un diagrama de espacio-tiempo con dos líneas de universo que van del mismo inicio al mismo final: la línea vertical recta del gemelo que se queda y el camino de ida y vuelta del gemelo viajero a través de un suceso de giro arrastrable.",
+        "controlArea": "El área de control tiene una casilla para el «ahora» del viajero, controles de tiempo del viaje y un botón Reiniciar todo que devuelve la simulación a su estado inicial.",
+        "interactionHint": "Arrastra el suceso del giro, reproduce el viaje y compara los dos relojes."
+      },
+      "currentDetails": "El giro está en x {{x}}, ct {{ct}} segundos luz, una velocidad de ida de {{beta}} veces la velocidad de la luz con gamma {{gamma}}. En el reencuentro el reloj de la Tierra marca {{earth}} segundos y el del viajero {{traveller}}.",
+      "controls": {
+        "turnaround": "Suceso del giro",
+        "turnaroundHelp": "Arrastra para cambiar cuán lejos y cuán rápido va el gemelo viajero.",
+        "showSimultaneity": "El «ahora» del viajero",
+        "showSimultaneityHelp": "Muestra qué momento en la Tierra llama «ahora» el viajero en cada instante."
+      }
+    },
+    "relativisticDoppler": {
+      "screenSummary": {
+        "playArea": "El área de juego muestra una fuente de luz que pasa junto a un observador en reposo, emitiendo frentes de onda que se expanden. El color que recibe el observador pasa del azul al rojo según la fuente se aleja, y un lóbulo muestra cómo el brillo se concentra hacia delante.",
+        "controlArea": "El área de control tiene un control deslizante de velocidad de la fuente, otro de longitud de onda emitida, casillas de frentes de onda y de lóbulo, controles de tiempo y un botón Reiniciar todo.",
+        "interactionHint": "Pon una velocidad alta y observa cómo el color recibido recorre el espectro cuando la fuente pasa."
+      },
+      "currentDetails": "La fuente se mueve a {{beta}} veces la velocidad de la luz y emite {{emitted}} nanómetros. El observador recibe {{observed}} nanómetros, un factor Doppler de {{doppler}} y un brillo relativo de {{brightness}}.",
+      "controls": {
+        "velocity": "Velocidad de la fuente",
+        "velocityHelp": "Velocidad de la fuente de luz, como fracción de la velocidad de la luz.",
+        "wavelength": "Longitud de onda emitida",
+        "wavelengthHelp": "Longitud de onda que la fuente emite en su propio sistema en reposo, en nanómetros.",
+        "showWavefronts": "Frentes de onda",
+        "showBeaming": "Lóbulo de enfoque"
+      }
     }
   },
   "preferences": {
     "title": "Simulación",
-    "exampleToggle": "Ejemplo de alternancia"
+    "showRapidity": "Mostrar la rapidez",
+    "showRapidityDescription": "Añade la rapidez η = artanh β junto al valor de γ. La rapidez se suma al combinar impulsos, cosa que β no hace.",
+    "shadeLightCone": "Sombrear el cono de luz por defecto",
+    "shadeLightConeDescription": "Inicia las pantallas de diagrama de espacio-tiempo y de la paradoja de los gemelos con el futuro y el pasado causales ya sombreados."
   }
 }

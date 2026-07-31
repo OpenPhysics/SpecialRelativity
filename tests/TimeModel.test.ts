@@ -1,10 +1,11 @@
 /**
  * TimeModel.test.ts
  *
- * Sample unit test shipped with the template so new sims are testable by default.
  * Exercises the composable play/pause + elapsed-time model in src/common/TimeModel.ts.
- * Delete or replace these when building a real sim — but keep at least one test so the
- * fleet-wide CI "test" step has something to run.
+ *
+ * Worth keeping despite being inherited from the template: every animated screen in
+ * this sim is a closed form of `timeProperty`, so a clock that advanced wrongly
+ * would put every photon, worldline and wavefront in the wrong place at once.
  */
 
 import { describe, expect, it } from "vitest";
