@@ -88,6 +88,28 @@ export const traverseStartTime = (time: number, beta: number, halfTrack: number)
 };
 
 /**
+ * Where the clock sits at the instant its current traverse began.
+ *
+ * This exists because {@link traverseStartTime} returns the instant of a *wrap*,
+ * and at exactly that instant the clock's position is ambiguous — it is leaving
+ * one end of the rail and arriving at the other. Asking {@link clockPosition} is
+ * not merely ambiguous but unreliable: `β · t_wrap` is a computed quantity, so
+ * rounding decides which side of the modulo it lands on and the answer can flip
+ * to the far end of the rail. Callers that need the position at that instant get
+ * the exact rail end instead, which is what it is.
+ *
+ * Before the first wrap the traverse begins at the clock's starting point, the
+ * centre of the rail.
+ */
+export const traverseStartPosition = (time: number, beta: number, halfTrack: number): number => {
+  const b = sanitizeBeta(beta);
+  if (b === 0 || traverseStartTime(time, b, halfTrack) <= 0) {
+    return 0;
+  }
+  return b > 0 ? -halfTrack : halfTrack;
+};
+
+/**
  * The photon's zigzag path through the lab frame over the clock's current
  * traverse of the rail, as `Vector2( x, height )` in light-seconds.
  *
@@ -109,7 +131,11 @@ export const photonTrail = (time: number, beta: number, armLength: number, halfT
   const at = (labTime: number): Vector2 =>
     new Vector2(clockPosition(labTime, b, halfTrack), photonHeight(labTime / gamma, armLength));
 
-  const trail: Vector2[] = [at(startTime)];
+  // The first vertex sits exactly on a wrap, so its x comes from the rail rather
+  // than from the modulo — see {@link traverseStartPosition}.
+  const trail: Vector2[] = [
+    new Vector2(traverseStartPosition(time, b, halfTrack), photonHeight(startTime / gamma, armLength)),
+  ];
 
   // Mirror strikes happen at whole multiples of the lab half-tick.
   const firstStrike = Math.ceil(startTime / halfTick);
@@ -120,4 +146,83 @@ export const photonTrail = (time: number, beta: number, armLength: number, halfT
 
   trail.push(at(time));
   return trail;
+};
+
+/**
+ * The right triangle the moving photon is currently walking around — the picture
+ * the whole screen argues from, drawn rather than asserted.
+ *
+ * Over the lab time Δt since the last mirror strike the clock has slid βΔt along
+ * the rail and the photon has climbed Δt/γ across it, while the photon itself has
+ * covered Δt — because it travels at c, which is the postulate. Those three
+ * numbers are the legs and hypotenuse of a right triangle, and
+ *
+ *     (Δt)² = (βΔt)² + (Δt/γ)²
+ *
+ * is the whole derivation of time dilation with nothing left over.
+ */
+export type LightTriangle = {
+  /** The mirror strike (or start of this traverse) the current leg began at. */
+  readonly start: Vector2;
+  /** The right-angle corner, directly across the rail from the photon. */
+  readonly corner: Vector2;
+  /** Where the photon is now. */
+  readonly photon: Vector2;
+  /** Length of the along-the-rail leg, βΔt. */
+  readonly clockDistance: number;
+  /** Length of the across-the-rail leg, Δt/γ. */
+  readonly transverse: number;
+  /** Length of the hypotenuse, Δt — the distance the photon actually flew. */
+  readonly lightDistance: number;
+};
+
+/**
+ * The triangle for the leg of the zigzag currently in progress, in lab
+ * coordinates `Vector2( x, height )`.
+ *
+ * Returns null when there is no triangle to draw: a clock at rest (the photon
+ * goes straight up, and the triangle has collapsed), or a moment that coincides
+ * with a mirror strike (the triangle has zero width).
+ *
+ * The leg is clipped to the current traverse of the finite rail for the same
+ * reason {@link photonTrail} is — a triangle spanning a wrap-around would have a
+ * base the clock never travelled.
+ */
+export const lightTriangle = (
+  time: number,
+  beta: number,
+  armLength: number,
+  halfTrack: number,
+): LightTriangle | null => {
+  const b = sanitizeBeta(beta);
+  if (b === 0 || time <= 0) {
+    return null;
+  }
+
+  const halfTick = labHalfTickTime(armLength, b);
+  const traverseStart = Math.max(0, traverseStartTime(time, b, halfTrack));
+  const legStart = Math.max(Math.floor(time / halfTick) * halfTick, traverseStart);
+  const elapsed = time - legStart;
+  if (elapsed <= 0) {
+    return null;
+  }
+
+  const gamma = gammaOf(b);
+  const photon = new Vector2(clockPosition(time, b, halfTrack), photonHeight(time / gamma, armLength));
+
+  // The leg's other end is found by walking back along the clock's own motion
+  // rather than by asking clockPosition again. Both give the same point, but this
+  // way the base of the triangle is βΔt *by construction* — and when the leg
+  // begins exactly on a wrap, it is the only one of the two that can be trusted
+  // (see {@link traverseStartPosition}).
+  const start = new Vector2(photon.x - b * elapsed, photonHeight(legStart / gamma, armLength));
+
+  return {
+    start,
+    corner: new Vector2(photon.x, start.y),
+    photon,
+    clockDistance: Math.abs(b) * elapsed,
+    transverse: elapsed / gamma,
+    lightDistance: elapsed,
+  };
 };

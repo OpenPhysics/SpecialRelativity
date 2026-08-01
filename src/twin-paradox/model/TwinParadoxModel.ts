@@ -12,35 +12,54 @@
  * parameter.
  */
 
-import { BooleanProperty, DerivedProperty, type TReadOnlyProperty } from "scenerystack/axon";
-import { Bounds2, Vector2 } from "scenerystack/dot";
+import { BooleanProperty, DerivedProperty, NumberProperty, type TReadOnlyProperty } from "scenerystack/axon";
+import { Bounds2, Range, Vector2 } from "scenerystack/dot";
 import type { TModel } from "scenerystack/joist";
 import { gammaOf } from "../../common/model/lorentz.js";
 import { SpacetimeEvent } from "../../common/model/SpacetimeEvent.js";
 import { TimeModel } from "../../common/TimeModel.js";
-import { TWIN } from "../../SpecialRelativityConstants.js";
+import { MAX_REUNION_TIME, TWIN } from "../../SpecialRelativityConstants.js";
 import {
+  earthSignals,
   JourneyLeg,
+  type LightSignal,
   outboundBeta,
   reunionTime,
+  signalsReceivedBy,
   simultaneityJump,
   travellerAt,
   travellerClockAt,
   travellerNow,
   travellerProperTime,
+  travellerSignals,
 } from "./twinJourney.js";
 
-/** Furthest the turn may be dragged, in light-seconds. */
-const TURNAROUND_MAX_X = 4.2;
-const TURNAROUND_MIN_CT = 0.6;
-const TURNAROUND_MAX_CT = 4.4;
+/** Range of the journey scrubber, in seconds of Earth time. */
+export const JOURNEY_TIME_RANGE = new Range(0, MAX_REUNION_TIME);
 
 export class TwinParadoxModel implements TModel {
   /** The single event that defines the whole trip. */
   public readonly turnaround: SpacetimeEvent;
 
-  /** Journey playback clock. Starts paused so the geometry can be set up first. */
+  /**
+   * Playback state — running or not, and how fast. The elapsed time itself lives
+   * in {@link journeyTimeProperty} rather than in the timer, because on this
+   * screen the playback clock **is** the Earth twin's clock and has to be both
+   * scrubbable and bounded by the reunion. `timer.timeProperty` is unused here.
+   */
   public readonly timer = new TimeModel();
+
+  /**
+   * Elapsed Earth time, in seconds — the master clock for this screen, and the
+   * property the scrubber writes to.
+   *
+   * Calibrating playback in Earth seconds rather than in animation seconds means
+   * the slider, the Earth readout and the diagram's ct axis are all the same
+   * number, so scrubbing to "ct = 4" lands on the turn instead of somewhere that
+   * has to be worked out. It is an accumulator, like `TimeModel.timeProperty`
+   * that it replaces; everything *geometric* is still a closed form of it.
+   */
+  public readonly journeyTimeProperty = new NumberProperty(0, { range: JOURNEY_TIME_RANGE, units: "s" });
 
   /** Speed of both legs, as a fraction of c. Derived from the turn's position. */
   public readonly outboundBetaProperty: TReadOnlyProperty<number>;
@@ -81,10 +100,34 @@ export class TwinParadoxModel implements TModel {
    */
   public readonly currentLegBetaProperty: TReadOnlyProperty<number>;
 
+  /** Pulses the Earth twin sends, one per second of their own time. */
+  public readonly earthSignalsProperty: TReadOnlyProperty<LightSignal[]>;
+
+  /** Pulses the travelling twin sends, one per second of their own time. */
+  public readonly travellerSignalsProperty: TReadOnlyProperty<LightSignal[]>;
+
+  /** How many Earth pulses the traveller has seen so far. */
+  public readonly signalsSeenByTravellerProperty: TReadOnlyProperty<number>;
+
+  /** How many traveller pulses the Earth twin has seen so far. */
+  public readonly signalsSeenByEarthProperty: TReadOnlyProperty<number>;
+
   public readonly showSimultaneityProperty = new BooleanProperty(true);
 
+  /**
+   * Whether the twins' light pulses are drawn. Off by default: the simultaneity
+   * line is the screen's first argument and the pulses are its cross-check, and
+   * both at once is a busy diagram.
+   */
+  public readonly showSignalsProperty = new BooleanProperty(false);
+
   public constructor() {
-    const bounds = new Bounds2(-TURNAROUND_MAX_X, TURNAROUND_MIN_CT, TURNAROUND_MAX_X, TURNAROUND_MAX_CT);
+    const bounds = new Bounds2(
+      -TWIN.MAX_TURNAROUND_X,
+      TWIN.MIN_TURNAROUND_CT,
+      TWIN.MAX_TURNAROUND_X,
+      TWIN.MAX_TURNAROUND_CT,
+    );
     this.turnaround = new SpacetimeEvent(
       "turnaround",
       new Vector2(TWIN.DEFAULT_TURNAROUND_X, TWIN.DEFAULT_TURNAROUND_CT),
@@ -105,13 +148,16 @@ export class TwinParadoxModel implements TModel {
       simultaneityJump(position),
     );
 
-    this.journeyFractionProperty = new DerivedProperty([this.timer.timeProperty], (time) =>
-      Math.max(0, Math.min(1, time / TWIN.JOURNEY_DURATION)),
+    // Dragging the turn can shorten the trip under a clock that has already run
+    // past the new reunion, so the journey time is clamped rather than trusted.
+    this.currentLabTimeProperty = new DerivedProperty(
+      [this.journeyTimeProperty, this.reunionTimeProperty],
+      (journeyTime, reunion) => Math.max(0, Math.min(journeyTime, reunion)),
     );
 
-    this.currentLabTimeProperty = new DerivedProperty(
-      [this.journeyFractionProperty, this.reunionTimeProperty],
-      (fraction, reunion) => fraction * reunion,
+    this.journeyFractionProperty = new DerivedProperty(
+      [this.currentLabTimeProperty, this.reunionTimeProperty],
+      (labTime, reunion) => (reunion === 0 ? 0 : labTime / reunion),
     );
 
     this.travellerPositionProperty = new DerivedProperty(
@@ -135,6 +181,31 @@ export class TwinParadoxModel implements TModel {
       [this.turnaround.positionProperty, this.currentLabTimeProperty, this.outboundBetaProperty],
       (turnaround, labTime, beta) => (travellerAt(turnaround, labTime).leg === JourneyLeg.OUTBOUND ? beta : -beta),
     );
+
+    this.earthSignalsProperty = new DerivedProperty([this.turnaround.positionProperty], (turnaround) =>
+      earthSignals(turnaround, TWIN.SIGNAL_INTERVAL),
+    );
+    this.travellerSignalsProperty = new DerivedProperty([this.turnaround.positionProperty], (turnaround) =>
+      travellerSignals(turnaround, TWIN.SIGNAL_INTERVAL),
+    );
+
+    this.signalsSeenByTravellerProperty = new DerivedProperty(
+      [this.earthSignalsProperty, this.currentLabTimeProperty],
+      (signals, labTime) => signalsReceivedBy(signals, labTime),
+    );
+    this.signalsSeenByEarthProperty = new DerivedProperty(
+      [this.travellerSignalsProperty, this.currentLabTimeProperty],
+      (signals, labTime) => signalsReceivedBy(signals, labTime),
+    );
+
+    // Pressing play once the twins are back together replays the trip rather
+    // than doing nothing, which is what a play button that cannot advance
+    // otherwise looks like.
+    this.timer.isPlayingProperty.lazyLink((isPlaying) => {
+      if (isPlaying && this.journeyTimeProperty.value >= this.reunionTimeProperty.value) {
+        this.journeyTimeProperty.value = 0;
+      }
+    });
   }
 
   /**
@@ -149,24 +220,47 @@ export class TwinParadoxModel implements TModel {
   }
 
   public step(dt: number): void {
-    this.timer.step(dt);
+    this.advance(this.timer.scaledDt(dt));
   }
 
   public stepForward(dt: number): void {
-    this.timer.stepForward(dt);
+    this.advance(dt);
   }
 
   public stepBackward(dt: number): void {
-    this.timer.stepBackward(dt);
+    this.advance(-dt);
+  }
+
+  /**
+   * Move the journey clock, stopping it dead at the reunion. Playback pauses
+   * there rather than running on: once the twins are standing together there is
+   * nothing left for the screen to show, and a clock still counting would suggest
+   * otherwise.
+   */
+  private advance(seconds: number): void {
+    const reunion = this.reunionTimeProperty.value;
+    const next = this.journeyTimeProperty.value + seconds;
+    if (next >= reunion) {
+      this.journeyTimeProperty.value = reunion;
+      this.timer.isPlayingProperty.value = false;
+    } else {
+      this.journeyTimeProperty.value = Math.max(0, next);
+    }
   }
 
   public reset(): void {
     this.turnaround.reset();
     this.timer.reset();
+    this.journeyTimeProperty.reset();
     this.showSimultaneityProperty.reset();
+    this.showSignalsProperty.reset();
   }
 
   public dispose(): void {
+    this.signalsSeenByEarthProperty.dispose();
+    this.signalsSeenByTravellerProperty.dispose();
+    this.travellerSignalsProperty.dispose();
+    this.earthSignalsProperty.dispose();
     this.currentLegBetaProperty.dispose();
     this.travellerNowProperty.dispose();
     this.travellerClockProperty.dispose();
@@ -179,6 +273,8 @@ export class TwinParadoxModel implements TModel {
     this.gammaProperty.dispose();
     this.outboundBetaProperty.dispose();
     this.showSimultaneityProperty.dispose();
+    this.showSignalsProperty.dispose();
+    this.journeyTimeProperty.dispose();
     this.turnaround.dispose();
     this.timer.dispose();
   }

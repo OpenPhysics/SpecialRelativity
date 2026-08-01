@@ -15,7 +15,7 @@
 import { DerivedProperty, Multilink, PatternStringProperty } from "scenerystack/axon";
 import { LinePlot } from "scenerystack/bamboo";
 import { Range, Vector2 } from "scenerystack/dot";
-import { Circle, Node, Text, VBox } from "scenerystack/scenery";
+import { Circle, HSeparator, Node, Text, VBox } from "scenerystack/scenery";
 import { ResetAllButton, TimeControlNode } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
@@ -31,6 +31,7 @@ import { formatSignificant } from "../../common/view/chartUtils.js";
 import {
   CONTROL_WIDTH,
   createCheckbox,
+  createNumberControl,
   createReadoutRow,
   createSectionHeader,
 } from "../../common/view/controlHelpers.js";
@@ -40,7 +41,8 @@ import { StringManager } from "../../i18n/StringManager.js";
 import type { SpecialRelativityPreferencesModel } from "../../preferences/SpecialRelativityPreferencesModel.js";
 import SpecialRelativityColors from "../../SpecialRelativityColors.js";
 import { DIAGRAM, EVENT, FONTS, SCREEN_VIEW_MARGIN } from "../../SpecialRelativityConstants.js";
-import type { TwinParadoxModel } from "../model/TwinParadoxModel.js";
+import { JOURNEY_TIME_RANGE, type TwinParadoxModel } from "../model/TwinParadoxModel.js";
+import type { LightSignal } from "../model/twinJourney.js";
 import { TwinParadoxScreenSummaryContent } from "./TwinParadoxScreenSummaryContent.js";
 
 const DIAGRAM_LEFT = 96;
@@ -112,6 +114,50 @@ export class TwinParadoxScreenView extends ScreenView {
     diagram.plotLayer.addChild(travellerWorldline);
     diagram.plotLayer.addChild(nowLine);
 
+    // ── The pulses the twins exchange ─────────────────────────────────────────
+    // Every segment runs at 45°, because every one of them is a light ray. The
+    // Earth twin's pulses and the traveller's are drawn in their owners' colours,
+    // and the asymmetry is visible without reading a single number: the outbound
+    // half of the trip is sparse and stretched, the inbound half crowded.
+    const earthSignalPlot = new LinePlot(diagram.chartTransform, [], {
+      stroke: SpecialRelativityColors.coordinateTimeColorProperty,
+      lineWidth: 1,
+      opacity: 0.75,
+    });
+    const travellerSignalPlot = new LinePlot(diagram.chartTransform, [], {
+      stroke: SpecialRelativityColors.properTimeColorProperty,
+      lineWidth: 1,
+      opacity: 0.75,
+    });
+    const signalLayer = new Node({
+      children: [earthSignalPlot, travellerSignalPlot],
+      visibleProperty: model.showSignalsProperty,
+    });
+    diagram.plotLayer.addChild(signalLayer);
+
+    /**
+     * Pack a list of pulses into one LinePlot. bamboo breaks a data set at a null
+     * entry, so the whole train is one plot rather than one node per pulse — the
+     * count changes every time the turn moves, and rebuilding a pool of nodes for
+     * it would be motion for nothing.
+     */
+    const setSignalData = (plot: LinePlot, signals: readonly LightSignal[]): void => {
+      const points: (Vector2 | null)[] = [];
+      for (const signal of signals) {
+        points.push(signal.emit, signal.receive, null);
+      }
+      plot.setDataSet(points);
+    };
+
+    const updateSignals = (): void => {
+      setSignalData(earthSignalPlot, model.earthSignalsProperty.value);
+      setSignalData(travellerSignalPlot, model.travellerSignalsProperty.value);
+    };
+    const signalMultilink = Multilink.multilink(
+      [model.earthSignalsProperty, model.travellerSignalsProperty],
+      updateSignals,
+    );
+
     const travellerMarker = new Circle(EVENT.RADIUS - 2, {
       fill: SpecialRelativityColors.properTimeColorProperty,
       stroke: SpecialRelativityColors.backgroundColorProperty,
@@ -149,7 +195,6 @@ export class TwinParadoxScreenView extends ScreenView {
       labelStringProperty: twinStrings.turnaroundStringProperty,
       accessibleName: a11y.controls.turnaroundStringProperty,
       accessibleHelpText: a11y.controls.turnaroundHelpStringProperty,
-      dragBoundsProperty: model.turnaround.dragBoundsProperty,
       mapPosition: (point) => model.constrainTurnaround(point),
     });
     diagram.overlayLayer.addChild(turnaroundNode);
@@ -186,6 +231,17 @@ export class TwinParadoxScreenView extends ScreenView {
       { decimalPlaces: 2 },
     );
 
+    // What each twin has actually *seen*, as opposed to what they compute. By the
+    // reunion the traveller has counted every one of Earth's pulses and Earth has
+    // counted only the traveller's fewer ones — the same conclusion as the clock
+    // readings, reached without trusting anybody's coordinates.
+    const seenByTravellerText = new DerivedProperty([model.signalsSeenByTravellerProperty], (count) =>
+      formatSignificant(count, 3),
+    );
+    const seenByEarthText = new DerivedProperty([model.signalsSeenByEarthProperty], (count) =>
+      formatSignificant(count, 3),
+    );
+
     const readoutPanel = new SpecialRelativityPanel(
       new VBox({
         align: "left",
@@ -210,6 +266,17 @@ export class TwinParadoxScreenView extends ScreenView {
             skippedText,
             SpecialRelativityColors.eventBColorProperty,
           ),
+          new HSeparator({ stroke: SpecialRelativityColors.panelBorderColorProperty }),
+          createReadoutRow(
+            twinStrings.seenByTravellerStringProperty,
+            seenByTravellerText,
+            SpecialRelativityColors.coordinateTimeColorProperty,
+          ),
+          createReadoutRow(
+            twinStrings.seenByEarthStringProperty,
+            seenByEarthText,
+            SpecialRelativityColors.properTimeColorProperty,
+          ),
         ],
       }),
     );
@@ -221,12 +288,36 @@ export class TwinParadoxScreenView extends ScreenView {
     );
     simultaneityCheckbox.accessibleHelpText = a11y.controls.showSimultaneityHelpStringProperty;
 
+    const signalsCheckbox = createCheckbox(
+      model.showSignalsProperty,
+      twinStrings.showSignalsStringProperty,
+      a11y.controls.showSignalsStringProperty,
+    );
+    signalsCheckbox.accessibleHelpText = a11y.controls.showSignalsHelpStringProperty;
+
+    // The scrubber is calibrated in Earth seconds — the same number the ct axis
+    // and the Earth readout show — so "take me to the turn" is a place on the
+    // slider rather than a fraction to work out. It runs to the latest reunion
+    // any allowed turn can produce and stops dead at the current one.
+    const journeyRangeProperty = new DerivedProperty([model.reunionTimeProperty], (reunion) => new Range(0, reunion));
+    const journeyControl = createNumberControl(model.journeyTimeProperty, JOURNEY_TIME_RANGE, {
+      titleProperty: twinStrings.journeyStringProperty,
+      valuePatternProperty: units.secondsStringProperty,
+      accessibleName: a11y.controls.journeyStringProperty,
+      accessibleHelpText: a11y.controls.journeyHelpStringProperty,
+      decimalPlaces: 1,
+      delta: 0.1,
+      enabledRangeProperty: journeyRangeProperty,
+    });
+
     const controlPanel = new SpecialRelativityPanel(
       new VBox({
         align: "left",
         spacing: 10,
         children: [
+          journeyControl,
           simultaneityCheckbox,
+          signalsCheckbox,
           new Text(twinStrings.dragHintStringProperty, {
             font: FONTS.READOUT,
             fill: SpecialRelativityColors.secondaryTextColorProperty,
@@ -283,13 +374,21 @@ export class TwinParadoxScreenView extends ScreenView {
 
     this.addChild(
       new Node({
-        pdomOrder: [turnaroundNode, simultaneityCheckbox, timeControlNode, resetAllButton],
+        pdomOrder: [
+          turnaroundNode,
+          journeyControl,
+          simultaneityCheckbox,
+          signalsCheckbox,
+          timeControlNode,
+          resetAllButton,
+        ],
       }),
     );
 
     this.disposeEmitter.addListener(() => {
       worldlineMultilink.dispose();
       travellerMultilink.dispose();
+      signalMultilink.dispose();
       betaText.dispose();
       gammaText.dispose();
       earthClockText.dispose();
@@ -297,6 +396,9 @@ export class TwinParadoxScreenView extends ScreenView {
       differenceText.dispose();
       differenceProperty.dispose();
       skippedText.dispose();
+      seenByTravellerText.dispose();
+      seenByEarthText.dispose();
+      journeyRangeProperty.dispose();
     });
   }
 

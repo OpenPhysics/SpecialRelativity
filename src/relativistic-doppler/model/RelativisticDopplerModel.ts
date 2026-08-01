@@ -12,8 +12,8 @@
  * is not.
  */
 
-import { BooleanProperty, DerivedProperty, NumberProperty, type TReadOnlyProperty } from "scenerystack/axon";
-import { Range } from "scenerystack/dot";
+import { BooleanProperty, DerivedProperty, NumberProperty, Property, type TReadOnlyProperty } from "scenerystack/axon";
+import { Bounds2, Range, Vector2, Vector2Property } from "scenerystack/dot";
 import type { TModel } from "scenerystack/joist";
 import { SpecialRelativityModel } from "../../common/model/SpecialRelativityModel.js";
 import { TimeModel } from "../../common/TimeModel.js";
@@ -42,6 +42,18 @@ export class RelativisticDopplerModel implements TModel {
     range: WAVELENGTH_RANGE,
   });
 
+  /**
+   * Where the observer stands, in light-seconds. Draggable, because where you
+   * stand is half the experiment: move along the track and the transverse moment
+   * moves with you; move away from it and the whole approach-to-recede swing
+   * stretches out and gentles, because the angle changes more slowly. Standing
+   * close makes the swing violent — the same physics, sampled differently.
+   */
+  public readonly observerPositionProperty: Vector2Property;
+
+  /** Region the observer may be dragged within. */
+  public readonly observerBoundsProperty: Property<Bounds2>;
+
   /** Where the source is now, along the x axis, in light-seconds. */
   public readonly sourcePositionProperty: TReadOnlyProperty<number>;
 
@@ -54,7 +66,25 @@ export class RelativisticDopplerModel implements TModel {
   public readonly showWavefrontsProperty = new BooleanProperty(true);
   public readonly showBeamingProperty = new BooleanProperty(true);
 
+  /**
+   * Whether the retarded emission point and the ray from it are drawn. Off by
+   * default, and the most quietly surprising thing on the screen when it is on:
+   * the source you are watching is never where the light you are seeing came
+   * from.
+   */
+  public readonly showLightRayProperty = new BooleanProperty(false);
+
   public constructor() {
+    this.observerPositionProperty = new Vector2Property(new Vector2(DOPPLER.OBSERVER_X, -DOPPLER.OBSERVER_DISTANCE));
+    this.observerBoundsProperty = new Property(
+      new Bounds2(
+        -DOPPLER.OBSERVER_MAX_X,
+        -DOPPLER.OBSERVER_MAX_DISTANCE,
+        DOPPLER.OBSERVER_MAX_X,
+        -DOPPLER.OBSERVER_MIN_DISTANCE,
+      ),
+    );
+
     this.sourcePositionProperty = new DerivedProperty(
       [this.timer.timeProperty, this.relativity.betaProperty],
       (time, beta) => sourcePositionAt(time, beta, DOPPLER.TRACK_HALF_LENGTH),
@@ -66,9 +96,13 @@ export class RelativisticDopplerModel implements TModel {
     );
 
     this.receivedSignalProperty = new DerivedProperty(
-      [this.timer.timeProperty, this.relativity.betaProperty, this.emittedWavelengthProperty],
-      (time, beta, wavelength) =>
-        receivedSignal(time, beta, DOPPLER.TRACK_HALF_LENGTH, DOPPLER.OBSERVER_DISTANCE, wavelength),
+      [
+        this.timer.timeProperty,
+        this.relativity.betaProperty,
+        this.emittedWavelengthProperty,
+        this.observerPositionProperty,
+      ],
+      (time, beta, wavelength, observer) => receivedSignal(time, beta, DOPPLER.TRACK_HALF_LENGTH, observer, wavelength),
     );
 
     // Changing the speed starts a fresh fly-by — see the class comment.
@@ -103,8 +137,10 @@ export class RelativisticDopplerModel implements TModel {
     this.relativity.reset();
     this.timer.reset();
     this.emittedWavelengthProperty.reset();
+    this.observerPositionProperty.reset();
     this.showWavefrontsProperty.reset();
     this.showBeamingProperty.reset();
+    this.showLightRayProperty.reset();
   }
 
   public dispose(): void {
@@ -112,8 +148,11 @@ export class RelativisticDopplerModel implements TModel {
     this.wavefrontsProperty.dispose();
     this.sourcePositionProperty.dispose();
     this.emittedWavelengthProperty.dispose();
+    this.observerPositionProperty.dispose();
+    this.observerBoundsProperty.dispose();
     this.showWavefrontsProperty.dispose();
     this.showBeamingProperty.dispose();
+    this.showLightRayProperty.dispose();
     this.relativity.dispose();
     this.timer.dispose();
   }

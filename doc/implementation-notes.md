@@ -22,7 +22,8 @@ src/
       SpacetimeEvent.ts                          one draggable event
     view/
       MinkowskiDiagramNode.ts                    the spacetime diagram
-      SpacetimeEventNode.ts                      a draggable event marker
+      DraggableMarkerNode.ts                     a draggable labelled dot (mouse + keyboard)
+      SpacetimeEventNode.ts                      the above, bound to a SpacetimeEvent
       controlHelpers.ts, chartUtils.ts
   light-clock/          model/{LightClockModel,lightClockGeometry}  view/…
   spacetime/            model/SpacetimeDiagramModel                 view/…
@@ -56,6 +57,29 @@ This is a deliberate departure from `DopplerEffect`, which maintains a mutable w
 emission clock. Here `wavefrontsAt( t )` simply enumerates the fronts whose emission times fall in the
 visible window. If you add a screen, keep to this: it costs nothing and removes a whole class of bug.
 
+The clock those closed forms read *is* an accumulator — `TimeModel.timeProperty` adds `scaledDt` each
+frame, and the Twin Paradox screen's `journeyTimeProperty` does the same. That is the invariant: one
+accumulating number per screen, and every piece of geometry a pure function of it. Nothing else may
+carry state between frames.
+
+### The Twin Paradox journey clock is Earth's clock
+
+That screen does not use `timer.timeProperty` at all; it keeps its own `journeyTimeProperty`,
+calibrated in **seconds of Earth time** rather than in animation seconds, and uses the `TimeModel`
+only for play/pause and speed. Three things follow, and all three were the point:
+
+- the scrubber, the diagram's ct axis and the Earth readout are the same number, so "take me to the
+  turn" is a place on the slider rather than a fraction to work out;
+- playback stops dead at the reunion instead of running on past it, and pressing play there replays
+  the trip;
+- the slider is built once over the widest possible trip (`MAX_REUNION_TIME`) and its *reachable* end
+  is moved with the turn by `NumberControl`'s `enabledRangeProperty`, which constrains the arrow
+  buttons as well as the thumb. Constraining the Property itself would mean setting it from inside
+  its own listener, which axon rejects as reentrant.
+
+`currentLabTimeProperty` still clamps to the reunion, because dragging the turn can shorten a trip
+under a clock that has already run past its new end.
+
 ### The shear is done in model space, never on the ChartTransform
 
 bamboo has no skew support, and shearing a layer with `Node.matrix` would distort the strokes and the
@@ -75,6 +99,19 @@ judgement the sim asks for becomes a lie.
 `MinkowskiDiagramNode` therefore takes a view **width** and *derives* the height from the ratio of the
 coordinate ranges. There is no combination of options that can break it, and no assertion to forget.
 `DIAGRAM` in the constants file has no `VIEW_HEIGHT` for exactly this reason.
+
+### Position at a rail wrap is asked for, never computed
+
+`clockPosition()` is a modulo, so it is discontinuous at a wrap — and `traverseStartTime()` returns
+exactly that instant. Worse than ambiguous, it is *unreliable*: `β · t_wrap` is a computed quantity,
+so rounding decides which side of the modulo it lands on, and the answer can flip to the far end of
+the rail. That produced a photon trail whose first vertex jumped the whole rail, and a light-clock
+triangle with a base four times the width it should have had.
+
+So nothing asks `clockPosition()` for the position at a wrap. `traverseStartPosition()` returns the
+rail end exactly, and `lightTriangle()` finds the other end of its leg by walking back along `β·Δt`
+from the photon — which also makes the triangle's base βΔt by construction rather than by agreement.
+`tests/lightClockGeometry.test.ts` sweeps a few hundred instants per β against both.
 
 ### One ModelViewTransform2 alongside the ChartTransform
 
@@ -147,8 +184,11 @@ PhET convention, so `reset()` covers them and the screen summary can describe th
 Every `DerivedProperty`, `Multilink`, `PatternStringProperty` and listener created in a constructor is
 disposed in the matching `dispose()` or `disposeEmitter` listener. Two specifics worth knowing:
 
-- `SpacetimeEventNode` **removes** its drag listeners before disposing them: `hotkeyManager` otherwise
-  keeps a reference to the disposed node alive, which `tests/memory-leak.test.ts` catches.
+- `DraggableMarkerNode` **removes** its drag listeners before disposing them: `hotkeyManager`
+  otherwise keeps a reference to the disposed node alive, which `tests/memory-leak.test.ts` catches.
+  This is why the drag machinery lives in one node that `SpacetimeEventNode` wraps, rather than being
+  written out twice — the Doppler screen's draggable observer is the same code, and would otherwise
+  have been the same bug again.
 - `TwinParadoxModel.earthClockProperty` is an alias for `currentLabTimeProperty`, so only one of them
   is disposed. Do not "fix" this by disposing both.
 
@@ -162,18 +202,24 @@ is more than one flat list keeps legible. This is a documented variation on the 
 ## Testing
 
 `npm test` runs Vitest over `tests/`, environment `happy-dom`, with `--expose-gc` for the memory-leak
-suite. 100 tests across six files.
+suite. 129 tests across six files.
 
 The house style is three layers per physics module:
 
 1. **hand-computed values** — γ = 5/4 at β = 3/5, the 3-4-5 twin trip giving 2√7;
 2. **independent structural checks** that the implementation cannot pass by restating its own formula
    — interval invariance under boost, boost∘inverse round trips, the light-travel-time condition the
-   retarded solve was derived from, path length ÷ elapsed time = c for the photon zigzag, and the
-   Earth-time accounting identity at the turn;
+   retarded solve was derived from, path length ÷ elapsed time = c for the photon zigzag, the
+   Earth-time accounting identity at the turn, Pythagoras on the light-clock triangle, |Δx| = Δct on
+   every twin-paradox pulse, and the two coordinate projections landing on the inverse boosts of
+   `(x′, 0)` and `(0, ct′)`;
 3. **a sweep over the extremes** of the allowed parameter space for finiteness and sign.
 
-Layer 2 is where the value is. When `simultaneityJump()` was first written with `|x|` instead of the
+Layer 2 is where the value is, and it keeps earning its place: the "legs match the corners" check on
+the light-clock triangle failed on its first run and turned out to be reporting a real, pre-existing
+bug in the *photon trail* — see "Position at a rail wrap" above.
+
+When `simultaneityJump()` was first written with `|x|` instead of the
 signed `x`, the accounting identity still passed (it measures the jump rather than computing it) and
 the closed-form comparison failed — which is exactly the split those two tests exist to produce.
 

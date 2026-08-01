@@ -11,7 +11,8 @@
     "lightSecondsSquared": "{{value}} sl²",
     "seconds": "{{value}} s",
     "nanometers": "{{value}} nm",
-    "beta": "{{value}} c"
+    "beta": "{{value}} c",
+    "degrees": "{{value}}°"
   },
   "common": {
     "velocity": "Vitesse relative",
@@ -34,7 +35,11 @@
     "restTicks": "Tics au repos",
     "movingTicks": "Tics en mouvement",
     "showTrail": "Trajet du photon",
-    "takeaway": "Les deux photons vont à c. Celui qui se déplace a simplement plus de chemin à parcourir : son horloge bat donc plus lentement d'un facteur γ."
+    "takeaway": "Les deux photons vont à c. Celui qui se déplace a simplement plus de chemin à parcourir : son horloge bat donc plus lentement d'un facteur γ.",
+    "mirrorSeparation": "Écartement des miroirs",
+    "showTriangle": "Triangle du trajet de la lumière",
+    "restPeriod": "Durée d'un tic, horloge propre",
+    "labPeriod": "Durée d'un tic, laboratoire"
   },
   "spacetime": {
     "eventA": "A",
@@ -57,7 +62,11 @@
     "bFirst": "B se produit en premier",
     "simultaneous": "A et B sont simultanés",
     "orderAgreed": "Tous les référentiels s'accordent sur cet ordre.",
-    "orderDisputed": "Changez β et l'ordre s'inverse : aucun des deux événements ne cause l'autre."
+    "orderDisputed": "Changez β et l'ordre s'inverse : aucun des deux événements ne cause l'autre.",
+    "boostToSimultaneity": "Rendre simultanés",
+    "showProjections": "Projections des coordonnées",
+    "properTime": "Temps propre",
+    "properDistance": "Distance propre"
   },
   "twinParadox": {
     "turnaround": "Demi-tour",
@@ -71,7 +80,11 @@
     "playJourney": "Lancer le voyage",
     "skippedLabel": "Sauté au demi-tour",
     "takeaway": "C'est le demi-tour qui brise la symétrie : à cet instant, le « maintenant » du voyageur sur Terre fait un bond en avant.",
-    "dragHint": "Faites glisser l'événement du demi-tour pour modifier le voyage."
+    "dragHint": "Faites glisser l'événement du demi-tour pour modifier le voyage.",
+    "journey": "Voyage",
+    "showSignals": "Signaux lumineux",
+    "seenByTraveller": "Éclairs terrestres vus",
+    "seenByEarth": "Éclairs du voyageur vus"
   },
   "relativisticDoppler": {
     "source": "Source",
@@ -86,27 +99,33 @@
     "receding": "En éloignement : décalée vers le rouge",
     "transverse": "Transversale : décalée vers le rouge par γ seul",
     "outsideVisible": "hors de la bande visible",
-    "takeaway": "Même vue de côté, sans approche ni éloignement, la lumière est décalée vers le rouge d'un facteur γ."
+    "takeaway": "Même vue de côté, sans approche ni éloignement, la lumière est décalée vers le rouge d'un facteur γ.",
+    "viewingAngle": "Angle de visée θ",
+    "showLightRay": "Rayon lumineux et source retardée"
   },
   "a11y": {
     "lightClock": {
       "screenSummary": {
         "playArea": "La zone de jeu montre deux horloges à lumière identiques. Celle du haut est au repos dans le laboratoire ; celle du bas passe à une fraction réglable de la vitesse de la lumière, son photon traçant un zigzag.",
-        "controlArea": "La zone de contrôle comporte un curseur de vitesse relative, une case pour le trajet du photon, des commandes de temps et un bouton Tout réinitialiser qui ramène la simulation à son état initial.",
-        "interactionHint": "Modifiez la vitesse relative et regardez les deux comptes de tics s'écarter."
+        "controlArea": "La zone de commande comporte un curseur de vitesse relative, un curseur d'écartement des miroirs, des cases pour le trajet du photon et le triangle du trajet de la lumière, des commandes de temps et un bouton Tout réinitialiser qui remet la simulation dans son état initial.",
+        "interactionHint": "Modifiez la vitesse relative et regardez les deux comptes de tics diverger, puis modifiez l'écartement des miroirs et constatez que leur rapport ne bouge pas."
       },
       "currentDetails": "À une vitesse relative de {{beta}} fois la vitesse de la lumière, gamma vaut {{gamma}}. L'horloge du laboratoire a compté {{restTicks}} tics et l'horloge mobile {{movingTicks}}.",
       "controls": {
         "velocity": "Vitesse relative",
         "velocityHelp": "Vitesse de l'horloge à lumière mobile, en fraction de la vitesse de la lumière.",
         "showTrail": "Trajet du photon",
-        "showTrailHelp": "Afficher le zigzag que le photon mobile trace à travers le laboratoire."
+        "showTrailHelp": "Afficher le zigzag que le photon mobile trace à travers le laboratoire.",
+        "mirrorSeparation": "Écartement des miroirs",
+        "mirrorSeparationHelp": "Distance entre les miroirs des deux horloges, en secondes-lumière. Un tic dure le double de cette valeur.",
+        "showTriangle": "Triangle du trajet de la lumière",
+        "showTriangleHelp": "Afficher le triangle rectangle dont les côtés sont la distance parcourue par l'horloge et celle traversée par le photon, et dont l'hypoténuse est la distance réellement parcourue par le photon."
       }
     },
     "spacetime": {
       "screenSummary": {
         "playArea": "La zone de jeu montre un diagramme d'espace-temps, l'espace en abscisse et le temps en ordonnée. On y trouve deux événements déplaçables, A et B, ainsi que le cône de lumière passant par l'origine et les axes d'un second référentiel se déplaçant à une vitesse réglable.",
-        "controlArea": "La zone de contrôle comporte un curseur de vitesse relative, des cases pour le cône de lumière, le référentiel mobile, les lignes de simultanéité et les hyperboles invariantes, un bouton qui passe au référentiel de l'événement B, et un bouton Tout réinitialiser.",
+        "controlArea": "La zone de commande comporte un curseur de vitesse relative, des cases pour le cône de lumière, le référentiel en mouvement, les lignes de simultanéité, les hyperboles invariantes et les projections des coordonnées, des boutons pour passer au référentiel de l'événement B et à celui où les événements sont simultanés, et un bouton Tout réinitialiser.",
         "interactionHint": "Déplacez un événement hors du cône de lumière, puis balayez la vitesse pour voir changer lequel se produit en premier."
       },
       "currentDetails": "L'événement A est en x {{ax}}, ct {{act}} secondes-lumière ; l'événement B est en x {{bx}}, ct {{bct}}. Leur séparation est {{separation}} avec un intervalle au carré de {{interval}}. À une vitesse relative de {{beta}} fois la vitesse de la lumière, {{order}}.",
@@ -124,28 +143,35 @@
         "showSimultaneity": "Ligne de simultanéité",
         "showHyperbolas": "Hyperboles invariantes",
         "boostToB": "Passer au référentiel de l'événement B",
-        "boostToBHelp": "Amène la vitesse relative à la valeur qui met l'événement B au repos, si elle existe."
+        "boostToBHelp": "Amène la vitesse relative à la valeur qui met l'événement B au repos, si elle existe.",
+        "boostToSimultaneity": "Passer au référentiel où A et B sont simultanés",
+        "boostToSimultaneityHelp": "Amener la vitesse relative à la valeur qui rend les deux événements simultanés, s'il en existe une.",
+        "showProjections": "Projections des coordonnées"
       }
     },
     "twinParadox": {
       "screenSummary": {
         "playArea": "La zone de jeu montre un diagramme d'espace-temps portant deux lignes d'univers qui vont du même départ à la même arrivée : la verticale du jumeau sédentaire et le trajet aller-retour du jumeau voyageur passant par un événement de demi-tour déplaçable.",
-        "controlArea": "La zone de contrôle comporte une case pour le « maintenant » du voyageur, des commandes de temps du voyage et un bouton Tout réinitialiser qui ramène la simulation à son état initial.",
-        "interactionHint": "Déplacez l'événement du demi-tour, lancez le voyage et comparez les deux horloges."
+        "controlArea": "La zone de commande comporte un curseur de voyage gradué en secondes terrestres, des cases pour le « maintenant » du voyageur et les signaux lumineux, des commandes de temps du voyage et un bouton Tout réinitialiser qui remet la simulation dans son état initial.",
+        "interactionHint": "Faites glisser l'événement du demi-tour, lancez le voyage et comparez les deux horloges — ou activez les signaux lumineux et comptez les éclairs."
       },
       "currentDetails": "Le demi-tour est en x {{x}}, ct {{ct}} secondes-lumière, soit une vitesse à l'aller de {{beta}} fois la vitesse de la lumière avec gamma {{gamma}}. Aux retrouvailles, l'horloge terrestre indique {{earth}} secondes et celle du voyageur {{traveller}}.",
       "controls": {
         "turnaround": "Événement du demi-tour",
         "turnaroundHelp": "Faites glisser pour changer la distance et la vitesse du jumeau voyageur.",
         "showSimultaneity": "Le « maintenant » du voyageur",
-        "showSimultaneityHelp": "Afficher quel instant sur Terre le voyageur appelle « maintenant »."
+        "showSimultaneityHelp": "Afficher quel instant sur Terre le voyageur appelle « maintenant ».",
+        "journey": "Temps de voyage",
+        "journeyHelp": "Parcourir le voyage. Mesuré en secondes de l'horloge terrestre, et s'arrête aux retrouvailles.",
+        "showSignals": "Signaux lumineux",
+        "showSignalsHelp": "Afficher les impulsions lumineuses que chaque jumeau envoie à l'autre une fois par seconde de son propre temps."
       }
     },
     "relativisticDoppler": {
       "screenSummary": {
-        "playArea": "La zone de jeu montre une source lumineuse qui passe devant un observateur immobile en émettant des fronts d'onde qui s'étendent. La couleur reçue passe du bleu au rouge à mesure que la source s'éloigne, et un lobe montre comment son éclat est concentré vers l'avant.",
-        "controlArea": "La zone de contrôle comporte un curseur de vitesse de la source, un curseur de longueur d'onde émise, des cases pour les fronts d'onde et le lobe, des commandes de temps et un bouton Tout réinitialiser.",
-        "interactionHint": "Choisissez une vitesse élevée et regardez la couleur reçue parcourir le spectre au passage de la source."
+        "playArea": "La zone d'animation montre une source lumineuse qui passe devant un observateur déplaçable, en émettant des fronts d'onde qui s'étendent. La couleur reçue par l'observateur passe du bleu au rouge au fil du passage de la source, et un lobe montre comment la luminosité de la source est concentrée vers l'avant.",
+        "controlArea": "La zone de commande comporte un curseur de vitesse de la source, un curseur de longueur d'onde émise, des cases pour les fronts d'onde, le lobe de concentration et le rayon lumineux, des commandes de temps et un bouton Tout réinitialiser.",
+        "interactionHint": "Choisissez une vitesse de source élevée et regardez la couleur reçue parcourir le spectre au passage de la source, puis déplacez l'observateur et voyez ce parcours changer d'allure."
       },
       "currentDetails": "La source se déplace à {{beta}} fois la vitesse de la lumière et émet {{emitted}} nanomètres. L'observateur reçoit {{observed}} nanomètres, soit un facteur Doppler de {{doppler}} et un éclat relatif de {{brightness}}.",
       "controls": {
@@ -154,7 +180,11 @@
         "wavelength": "Longueur d'onde émise",
         "wavelengthHelp": "Longueur d'onde que la source émet dans son propre référentiel au repos, en nanomètres.",
         "showWavefronts": "Fronts d'onde",
-        "showBeaming": "Lobe de focalisation"
+        "showBeaming": "Lobe de focalisation",
+        "observer": "Observateur",
+        "observerHelp": "Faire glisser pour changer la position de l'observateur, et donc l'angle sous lequel la lumière lui parvient.",
+        "showLightRay": "Rayon lumineux et source retardée",
+        "showLightRayHelp": "Afficher où se trouvait la source lorsqu'elle a émis la lumière qui arrive maintenant, et le chemin suivi par cette lumière."
       }
     }
   },

@@ -17,14 +17,17 @@ import { Vector2 } from "scenerystack/dot";
 import { describe, expect, it } from "vitest";
 import { gammaOf } from "../src/common/model/lorentz.js";
 import {
+  earthSignals,
   JourneyLeg,
   outboundBeta,
   reunionTime,
+  signalsReceivedBy,
   simultaneityJump,
   travellerAt,
   travellerClockAt,
   travellerNow,
   travellerProperTime,
+  travellerSignals,
 } from "../src/twin-paradox/model/twinJourney.js";
 
 /** Turns spanning slow, the sim default, and close to the light cone. */
@@ -143,5 +146,123 @@ describe("the jump in the traveller's now", () => {
       expect(travellerNow(turn, 0)).toBeCloseTo(0, 12);
       expect(travellerNow(turn, reunionTime(turn))).toBeCloseTo(reunionTime(turn), 10);
     }
+  });
+});
+
+describe("the light signals the twins exchange", () => {
+  const INTERVAL = 1;
+
+  it("sends one pulse per second of the sender's own time", () => {
+    for (const turn of TURNS) {
+      // Earth's schedule is lab time; the traveller's is proper time, so their
+      // emissions are spread by γ in lab time — the dilation, made countable.
+      const earth = earthSignals(turn, INTERVAL);
+      earth.forEach((signal, index) => {
+        expect(signal.emit.x).toBe(0);
+        expect(signal.emit.y).toBeCloseTo((index + 1) * INTERVAL, 10);
+      });
+
+      const gamma = gammaOf(outboundBeta(turn));
+      travellerSignals(turn, INTERVAL).forEach((signal, index) => {
+        expect(signal.emit.y).toBeCloseTo((index + 1) * INTERVAL * gamma, 10);
+      });
+    }
+  });
+
+  it("moves every pulse at exactly c", () => {
+    // The independent check. Each segment is asserted to be a light ray by the
+    // only test that means anything: |Δx| = Δct.
+    for (const turn of TURNS) {
+      for (const signal of [...earthSignals(turn, INTERVAL), ...travellerSignals(turn, INTERVAL)]) {
+        const dx = signal.receive.x - signal.emit.x;
+        const dct = signal.receive.y - signal.emit.y;
+        expect(dct).toBeGreaterThanOrEqual(0);
+        expect(Math.abs(dx)).toBeCloseTo(dct, 10);
+      }
+    }
+  });
+
+  it("delivers each pulse to a point on the receiver's worldline", () => {
+    for (const turn of TURNS) {
+      for (const signal of earthSignals(turn, INTERVAL)) {
+        // Landed on the traveller: the reception event must be where the
+        // traveller is at that moment.
+        const traveller = travellerAt(turn, signal.receive.y).position;
+        expect(signal.receive.x).toBeCloseTo(traveller.x, 9);
+      }
+      for (const signal of travellerSignals(turn, INTERVAL)) {
+        // Landed on Earth, which never leaves x = 0.
+        expect(signal.receive.x).toBe(0);
+        expect(signal.emit.x).toBeCloseTo(travellerAt(turn, signal.emit.y).position.x, 10);
+      }
+    }
+  });
+
+  it("lets each twin see the other's whole clock by the reunion", () => {
+    // This is the resolution of the paradox stated in flashes rather than in
+    // coordinates, and it is the reason the pulses are worth drawing. By the
+    // reunion the traveller has seen *every* pulse Earth sent — one per Earth
+    // second, all of them — while Earth has seen only the traveller's fewer
+    // ones. Neither twin has to be told whose clock ran slow; they counted.
+    for (const turn of TURNS) {
+      const reunion = reunionTime(turn);
+      const properTime = travellerProperTime(turn);
+
+      const earth = earthSignals(turn, INTERVAL);
+      const traveller = travellerSignals(turn, INTERVAL);
+
+      expect(signalsReceivedBy(earth, reunion + 1e-9)).toBe(Math.floor(reunion / INTERVAL + 1e-9));
+      expect(signalsReceivedBy(traveller, reunion + 1e-9)).toBe(Math.floor(properTime / INTERVAL + 1e-9));
+
+      // …and the traveller therefore sees more flashes than they send, which is
+      // the same statement as "the Earth clock ran ahead".
+      if (properTime < reunion - INTERVAL) {
+        expect(earth.length).toBeGreaterThan(traveller.length);
+      }
+    }
+  });
+
+  it("stretches the outbound gaps and crowds the inbound ones", () => {
+    // The Doppler signature of the trip: pulses arriving while the traveller
+    // recedes are spaced by more than the interval, and those arriving on the
+    // way back by less. Nothing computes a Doppler factor here — the spacing
+    // falls out of the geometry.
+    // A slower trip, so that several pulses land before the turn as well as
+    // after it — at the default speed the traveller outruns all but one.
+    const turn = new Vector2(1, 4);
+    const signals = earthSignals(turn, INTERVAL);
+    const gaps = signals.slice(1).map((signal, index) => {
+      const previous = signals[index] as (typeof signals)[number];
+      return signal.receive.y - previous.receive.y;
+    });
+    const receivedOnLeg = (index: number, leg: JourneyLeg): boolean => {
+      const signal = signals[index + 1] as (typeof signals)[number];
+      return travellerAt(turn, signal.receive.y).leg === leg;
+    };
+    const outbound = gaps.filter((_, index) => receivedOnLeg(index, JourneyLeg.OUTBOUND));
+    const inbound = gaps.filter((_, index) => receivedOnLeg(index, JourneyLeg.INBOUND));
+    expect(outbound.length).toBeGreaterThan(0);
+    expect(inbound.length).toBeGreaterThan(0);
+    for (const gap of outbound) {
+      expect(gap).toBeGreaterThan(INTERVAL);
+    }
+    for (const gap of inbound) {
+      expect(gap).toBeLessThan(INTERVAL);
+    }
+  });
+
+  it("counts only the pulses that have arrived", () => {
+    const turn = new Vector2(3, 4);
+    const signals = earthSignals(turn, INTERVAL);
+    expect(signalsReceivedBy(signals, 0)).toBe(0);
+    expect(signalsReceivedBy(signals, reunionTime(turn) + 1)).toBe(signals.length);
+    for (const signal of signals) {
+      expect(signalsReceivedBy(signals, signal.receive.y)).toBeGreaterThan(0);
+    }
+  });
+
+  it("returns nothing for a degenerate interval", () => {
+    expect(earthSignals(new Vector2(3, 4), 0)).toEqual([]);
+    expect(travellerSignals(new Vector2(3, 4), -1)).toEqual([]);
   });
 });

@@ -36,6 +36,7 @@ import {
   createNumberControl,
   createReadoutRow,
 } from "../../common/view/controlHelpers.js";
+import { DraggableMarkerNode } from "../../common/view/DraggableMarkerNode.js";
 import { StringManager } from "../../i18n/StringManager.js";
 import type { SpecialRelativityPreferencesModel } from "../../preferences/SpecialRelativityPreferencesModel.js";
 import SpecialRelativityColors from "../../SpecialRelativityColors.js";
@@ -97,18 +98,30 @@ export class RelativisticDopplerScreenView extends ScreenView {
     wavefrontLayer.visibleProperty = model.showWavefrontsProperty;
     this.addChild(wavefrontLayer);
 
-    const observerPosition = modelViewTransform.modelToViewPosition(new Vector2(0, -DOPPLER.OBSERVER_DISTANCE));
-    const observerNode = new Circle(DOPPLER.OBSERVER_RADIUS, {
-      fill: SpecialRelativityColors.observerColorProperty,
-      center: observerPosition,
+    // ── The retarded emission point and the ray from it ───────────────────────
+    // Drawn under everything else. The dashed segment joins where the source is
+    // *now* to where it was when it emitted the light arriving *now*; the solid
+    // one is the path that light actually took. The gap between the two markers
+    // is the whole of "you never see a moving thing where it is".
+    const rayPath = new Path(null, {
+      stroke: SpecialRelativityColors.photonColorProperty,
+      lineWidth: 2,
     });
-    const observerLabel = new Text(dopplerStrings.observerStringProperty, {
-      font: FONTS.READOUT,
-      fill: SpecialRelativityColors.secondaryTextColorProperty,
-      centerX: observerPosition.x,
-      top: observerPosition.y + 14,
-      maxWidth: 140,
+    const laggedSourceLink = new Path(null, {
+      stroke: SpecialRelativityColors.secondaryTextColorProperty,
+      lineWidth: 1,
+      lineDash: [4, 4],
     });
+    const laggedSourceMarker = new Circle(DOPPLER.SOURCE_RADIUS - 3, {
+      fill: null,
+      stroke: SpecialRelativityColors.eventAColorProperty,
+      lineWidth: 2,
+    });
+    const rayLayer = new Node({
+      children: [laggedSourceLink, rayPath, laggedSourceMarker],
+      visibleProperty: model.showLightRayProperty,
+    });
+    this.addChild(rayLayer);
 
     const beamingPath = new Path(null, {
       fill: SpecialRelativityColors.beamingFillColorProperty,
@@ -129,8 +142,19 @@ export class RelativisticDopplerScreenView extends ScreenView {
     });
     this.addChild(sourceNode);
     this.addChild(sourceLabel);
+
+    // The observer is draggable: where you stand is half the experiment. Move
+    // along the track and the transverse moment moves with you; stand further off
+    // it and the whole approach-to-recede swing stretches out and gentles.
+    const observerNode = new DraggableMarkerNode(model.observerPositionProperty, modelViewTransform, {
+      fill: SpecialRelativityColors.observerColorProperty,
+      labelStringProperty: dopplerStrings.observerStringProperty,
+      accessibleName: a11y.controls.observerStringProperty,
+      accessibleHelpText: a11y.controls.observerHelpStringProperty,
+      dragBoundsProperty: model.observerBoundsProperty,
+      radius: DOPPLER.OBSERVER_RADIUS,
+    });
     this.addChild(observerNode);
-    this.addChild(observerLabel);
 
     // ── Wavefronts ────────────────────────────────────────────────────────────
     const frontPool: Circle[] = [];
@@ -192,6 +216,22 @@ export class RelativisticDopplerScreenView extends ScreenView {
       updateSource,
     );
 
+    // ── The retarded ray ──────────────────────────────────────────────────────
+    const updateRay = (): void => {
+      const signal = model.receivedSignalProperty.value;
+      const emission = modelViewTransform.modelToViewPosition(new Vector2(signal.emissionX, 0));
+      const observer = modelViewTransform.modelToViewPosition(model.observerPositionProperty.value);
+      const source = modelViewTransform.modelToViewPosition(new Vector2(model.sourcePositionProperty.value, 0));
+
+      rayPath.shape = new Shape().moveToPoint(emission).lineToPoint(observer);
+      laggedSourceLink.shape = new Shape().moveToPoint(emission).lineToPoint(source);
+      laggedSourceMarker.center = emission;
+    };
+    const rayMultilink = Multilink.multilink(
+      [model.receivedSignalProperty, model.observerPositionProperty, model.sourcePositionProperty],
+      updateRay,
+    );
+
     // ── Received colour ───────────────────────────────────────────────────────
     const swatch = new Rectangle(0, 0, 54, 26, {
       cornerRadius: 4,
@@ -230,6 +270,18 @@ export class RelativisticDopplerScreenView extends ScreenView {
     );
     const gammaText = new DerivedProperty([model.relativity.gammaProperty], (gamma) => formatSignificant(gamma, 3));
 
+    // θ in degrees, because "90°" is a thing a student can picture and
+    // "cos θ = 0" is not — and 90° is the moment the whole screen is built around.
+    const angleProperty = new DerivedProperty(
+      [model.receivedSignalProperty],
+      (signal) => (signal.theta * 180) / Math.PI,
+    );
+    const angleText = new PatternStringProperty(
+      units.degreesStringProperty,
+      { value: angleProperty },
+      { decimalPlaces: 0 },
+    );
+
     const statusText = new DerivedProperty(
       [
         model.receivedSignalProperty,
@@ -263,6 +315,7 @@ export class RelativisticDopplerScreenView extends ScreenView {
             observedText,
             SpecialRelativityColors.accentColorProperty,
           ),
+          createReadoutRow(dopplerStrings.viewingAngleStringProperty, angleText),
           createReadoutRow(dopplerStrings.dopplerFactorStringProperty, dopplerText),
           createReadoutRow(dopplerStrings.relativeBrightnessStringProperty, brightnessText),
           createReadoutRow(commonStrings.gammaStringProperty, gammaText),
@@ -304,12 +357,18 @@ export class RelativisticDopplerScreenView extends ScreenView {
       dopplerStrings.showBeamingStringProperty,
       a11y.controls.showBeamingStringProperty,
     );
+    const rayCheckbox = createCheckbox(
+      model.showLightRayProperty,
+      dopplerStrings.showLightRayStringProperty,
+      a11y.controls.showLightRayStringProperty,
+    );
+    rayCheckbox.accessibleHelpText = a11y.controls.showLightRayHelpStringProperty;
 
     const controlPanel = new SpecialRelativityPanel(
       new VBox({
         align: "left",
         spacing: 12,
-        children: [betaControl, wavelengthControl, wavefrontCheckbox, beamingCheckbox],
+        children: [betaControl, wavelengthControl, wavefrontCheckbox, beamingCheckbox, rayCheckbox],
       }),
     );
 
@@ -358,13 +417,17 @@ export class RelativisticDopplerScreenView extends ScreenView {
     });
     this.addChild(resetAllButton);
 
+    // The observer first: it is the one thing on this screen the user can pick
+    // up, and a keyboard user should reach it before the sliders. Reset All last.
     this.addChild(
       new Node({
         pdomOrder: [
+          observerNode,
           betaControl,
           wavelengthControl,
           wavefrontCheckbox,
           beamingCheckbox,
+          rayCheckbox,
           timeControlNode,
           resetAllButton,
         ],
@@ -374,6 +437,7 @@ export class RelativisticDopplerScreenView extends ScreenView {
     this.disposeEmitter.addListener(() => {
       wavefrontMultilink.dispose();
       sourceMultilink.dispose();
+      rayMultilink.dispose();
       model.receivedSignalProperty.unlink(updateSwatch);
       observedWavelengthProperty.dispose();
       observedText.dispose();
@@ -381,6 +445,8 @@ export class RelativisticDopplerScreenView extends ScreenView {
       dopplerText.dispose();
       brightnessText.dispose();
       gammaText.dispose();
+      angleProperty.dispose();
+      angleText.dispose();
       statusText.dispose();
     });
   }

@@ -15,9 +15,12 @@
  * moment in the wrong place and would not reproduce the transverse redshift by γ,
  * which is the one result on this screen that has no classical counterpart.
  *
- * Geometry: the source travels along the x axis; the observer sits at
- * (0, −observerDistance), off to one side, so the received direction sweeps
- * smoothly from head-on through perpendicular to straight away.
+ * Geometry: the source travels along the x axis and the observer sits somewhere
+ * off it, so the received direction sweeps smoothly from head-on through
+ * perpendicular to straight away. The observer's position is a free parameter
+ * rather than a constant: moving it changes *when* the transverse moment happens
+ * and how sharply the shift swings through it, and that is a thing worth being
+ * able to try.
  */
 
 import { Vector2 } from "scenerystack/dot";
@@ -43,22 +46,19 @@ export const traverseDuration = (beta: number, halfTrack: number): number => {
  * Lab time at which the light now reaching the observer was emitted.
  *
  * Solving |observer − source(t_e)| = t − t_e for t_e gives a quadratic whose
- * discriminant simplifies to x_now² + d²/γ² — manifestly non-negative, so the
- * retarded solution always exists. The smaller root is the physical one: the
- * larger corresponds to light that would have to arrive before it was emitted.
+ * discriminant simplifies to (x_now − x_obs)² + y_obs²/γ² — manifestly
+ * non-negative, so the retarded solution always exists. The smaller root is the
+ * physical one: the larger corresponds to light that would have to arrive before
+ * it was emitted.
  */
-export const retardedEmissionTime = (
-  time: number,
-  beta: number,
-  halfTrack: number,
-  observerDistance: number,
-): number => {
+export const retardedEmissionTime = (time: number, beta: number, halfTrack: number, observer: Vector2): number => {
   const b = sanitizeBeta(beta);
   const start = startPosition(b, halfTrack);
   const oneMinusBetaSquared = 1 - b * b;
   const currentX = start + b * time;
-  const discriminant = currentX * currentX + (observerDistance * observerDistance) / gammaOf(b) ** 2;
-  return (start * b + time - Math.sqrt(discriminant)) / oneMinusBetaSquared;
+  const offset = currentX - observer.x;
+  const discriminant = offset * offset + (observer.y * observer.y) / gammaOf(b) ** 2;
+  return ((start - observer.x) * b + time - Math.sqrt(discriminant)) / oneMinusBetaSquared;
 };
 
 export type ReceivedSignal = {
@@ -70,6 +70,8 @@ export type ReceivedSignal = {
   readonly travelDistance: number;
   /** Cosine of the angle between the source's velocity and the received ray. */
   readonly cosTheta: number;
+  /** That angle itself, in radians, from 0 (head-on) through π/2 to π (receding). */
+  readonly theta: number;
   /** Doppler factor D: observed frequency ÷ emitted frequency. */
   readonly doppler: number;
   /** Observed wavelength in nanometres, λ₀/D. */
@@ -83,18 +85,18 @@ export const receivedSignal = (
   time: number,
   beta: number,
   halfTrack: number,
-  observerDistance: number,
+  observer: Vector2,
   emittedWavelength: number,
 ): ReceivedSignal => {
   const b = sanitizeBeta(beta);
-  const emissionTime = retardedEmissionTime(time, b, halfTrack, observerDistance);
+  const emissionTime = retardedEmissionTime(time, b, halfTrack, observer);
   const emissionX = sourcePositionAt(emissionTime, b, halfTrack);
   const travelDistance = Math.max(time - emissionTime, Number.EPSILON);
 
-  // The received ray runs from (emissionX, 0) to (0, −d); its component along the
-  // +x axis is −emissionX/R. Using the signed β with this signed cosine means one
-  // formula covers both directions of travel.
-  const cosTheta = -emissionX / travelDistance;
+  // The received ray runs from (emissionX, 0) to the observer; its component
+  // along the +x axis is (x_obs − emissionX)/R. Using the signed β with this
+  // signed cosine means one formula covers both directions of travel.
+  const cosTheta = Math.max(-1, Math.min(1, (observer.x - emissionX) / travelDistance));
   const doppler = dopplerFactor(b, cosTheta);
 
   return {
@@ -102,6 +104,7 @@ export const receivedSignal = (
     emissionTime,
     travelDistance,
     cosTheta,
+    theta: Math.acos(cosTheta),
     doppler,
     observedWavelength: emittedWavelength / doppler,
     relativeBrightness: bolometricBeaming(b, cosTheta),

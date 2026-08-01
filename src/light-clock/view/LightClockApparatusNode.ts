@@ -12,42 +12,43 @@
  * isolates time dilation instead of tangling it with a second effect.
  */
 
-import type { TReadOnlyProperty } from "scenerystack/axon";
+import { Multilink, type TReadOnlyProperty } from "scenerystack/axon";
 import { Circle, Line, Node, Rectangle, Text } from "scenerystack/scenery";
 import SpecialRelativityColors from "../../SpecialRelativityColors.js";
 import { FONTS, LIGHT_CLOCK } from "../../SpecialRelativityConstants.js";
 
 export class LightClockApparatusNode extends Node {
-  public constructor(photonHeightProperty: TReadOnlyProperty<number>, labelProperty: TReadOnlyProperty<string>) {
+  public constructor(
+    photonHeightProperty: TReadOnlyProperty<number>,
+    armLengthProperty: TReadOnlyProperty<number>,
+    labelProperty: TReadOnlyProperty<string>,
+  ) {
     super();
 
-    const armPixels = LIGHT_CLOCK.ARM_LENGTH * LIGHT_CLOCK.VIEW_SCALE;
     const halfWidth = LIGHT_CLOCK.MIRROR_WIDTH / 2;
 
     // Scenery's y axis points down, so "up" between the mirrors is negative y.
-    for (const y of [0, -armPixels]) {
-      this.addChild(
-        new Rectangle(
-          -halfWidth,
-          y - LIGHT_CLOCK.MIRROR_HEIGHT / 2,
-          LIGHT_CLOCK.MIRROR_WIDTH,
-          LIGHT_CLOCK.MIRROR_HEIGHT,
-          {
-            fill: SpecialRelativityColors.apparatusColorProperty,
-            cornerRadius: 2,
-          },
-        ),
-      );
-    }
+    const bottomMirror = new Rectangle(0, 0, 0, 0, {
+      fill: SpecialRelativityColors.apparatusColorProperty,
+      cornerRadius: 2,
+    });
+    const topMirror = new Rectangle(0, 0, 0, 0, {
+      fill: SpecialRelativityColors.apparatusColorProperty,
+      cornerRadius: 2,
+    });
+    this.addChild(bottomMirror);
+    this.addChild(topMirror);
 
-    for (const x of [-halfWidth, halfWidth]) {
-      this.addChild(
-        new Line(x, 0, x, -armPixels, {
+    const posts = [-halfWidth, halfWidth].map(
+      (x) =>
+        new Line(x, 0, x, 0, {
           stroke: SpecialRelativityColors.trackColorProperty,
           lineWidth: 1,
           lineDash: [3, 3],
         }),
-      );
+    );
+    for (const post of posts) {
+      this.addChild(post);
     }
 
     const photon = new Circle(LIGHT_CLOCK.PHOTON_RADIUS, {
@@ -64,13 +65,33 @@ export class LightClockApparatusNode extends Node {
     });
     this.addChild(label);
 
-    const updatePhoton = (height: number): void => {
+    // The mirrors are drawn the same width whatever the separation, and the
+    // separation is the same for the resting and the moving clock. Both are
+    // physically right rather than shortcuts: this length is *across* the motion,
+    // and transverse lengths are not contracted.
+    const update = (height: number, armLength: number): void => {
+      const armPixels = armLength * LIGHT_CLOCK.VIEW_SCALE;
+      bottomMirror.setRect(
+        -halfWidth,
+        -LIGHT_CLOCK.MIRROR_HEIGHT / 2,
+        LIGHT_CLOCK.MIRROR_WIDTH,
+        LIGHT_CLOCK.MIRROR_HEIGHT,
+      );
+      topMirror.setRect(
+        -halfWidth,
+        -armPixels - LIGHT_CLOCK.MIRROR_HEIGHT / 2,
+        LIGHT_CLOCK.MIRROR_WIDTH,
+        LIGHT_CLOCK.MIRROR_HEIGHT,
+      );
+      for (const post of posts) {
+        post.setY2(-armPixels);
+      }
       photon.centerY = -height * LIGHT_CLOCK.VIEW_SCALE;
     };
-    photonHeightProperty.link(updatePhoton);
+    const updateMultilink = Multilink.multilink([photonHeightProperty, armLengthProperty], update);
 
     this.disposeEmitter.addListener(() => {
-      photonHeightProperty.unlink(updatePhoton);
+      updateMultilink.dispose();
       label.dispose();
     });
   }

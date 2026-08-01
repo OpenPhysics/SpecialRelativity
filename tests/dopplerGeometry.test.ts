@@ -9,6 +9,7 @@
  * by exactly γ.
  */
 
+import { Vector2 } from "scenerystack/dot";
 import { describe, expect, it } from "vitest";
 import { dopplerFactor, gammaOf, MAX_BETA } from "../src/common/model/lorentz.js";
 import {
@@ -23,12 +24,16 @@ import {
 
 const HALF_TRACK = 7;
 const OBSERVER_DISTANCE = 2.6;
+const OBSERVER = new Vector2(0, -OBSERVER_DISTANCE);
 const WAVELENGTH = 550;
 const BETA_SWEEP = [-MAX_BETA, -0.9, -0.5, 0, 0.5, 0.9, MAX_BETA];
 
-/** Distance from the source's position at `time` to the observer at (0, −d). */
-const distanceToObserver = (time: number, beta: number): number =>
-  Math.hypot(sourcePositionAt(time, beta, HALF_TRACK), OBSERVER_DISTANCE);
+/** Every observer placement the screen allows, corners included. */
+const OBSERVER_SWEEP = [OBSERVER, new Vector2(0, -1.5), new Vector2(4, -2.6), new Vector2(-6, -6.5)];
+
+/** Distance from the source's position at `time` to `observer`. */
+const distanceToObserver = (time: number, beta: number, observer = OBSERVER): number =>
+  Math.hypot(sourcePositionAt(time, beta, HALF_TRACK) - observer.x, observer.y);
 
 describe("the source's flight", () => {
   it("starts at the far end so that it begins by approaching", () => {
@@ -57,7 +62,7 @@ describe("the retarded emission event", () => {
     // the quadratic was solved correctly.
     for (const beta of BETA_SWEEP) {
       for (const time of [0.5, 3, 9, 20]) {
-        const emissionTime = retardedEmissionTime(time, beta, HALF_TRACK, OBSERVER_DISTANCE);
+        const emissionTime = retardedEmissionTime(time, beta, HALF_TRACK, OBSERVER);
         expect(distanceToObserver(emissionTime, beta)).toBeCloseTo(time - emissionTime, 9);
       }
     }
@@ -66,32 +71,40 @@ describe("the retarded emission event", () => {
   it("picks the root in the past", () => {
     for (const beta of BETA_SWEEP) {
       for (const time of [0.5, 3, 9, 20]) {
-        expect(retardedEmissionTime(time, beta, HALF_TRACK, OBSERVER_DISTANCE)).toBeLessThan(time);
+        expect(retardedEmissionTime(time, beta, HALF_TRACK, OBSERVER)).toBeLessThan(time);
       }
     }
   });
 
   it("reduces to a plain light-travel delay for a stationary source", () => {
     const delay = Math.hypot(HALF_TRACK, OBSERVER_DISTANCE);
-    expect(retardedEmissionTime(10, 0, HALF_TRACK, OBSERVER_DISTANCE)).toBeCloseTo(10 - delay, 10);
+    expect(retardedEmissionTime(10, 0, HALF_TRACK, OBSERVER)).toBeCloseTo(10 - delay, 10);
+  });
+
+  it("still satisfies that condition wherever the observer stands", () => {
+    // Same independent check as above, swept over the whole draggable region:
+    // the solve is general in the observer's position, not special to x = 0.
+    for (const observer of OBSERVER_SWEEP) {
+      for (const beta of BETA_SWEEP) {
+        for (const time of [0.5, 3, 9, 20]) {
+          const emissionTime = retardedEmissionTime(time, beta, HALF_TRACK, observer);
+          expect(distanceToObserver(emissionTime, beta, observer)).toBeCloseTo(time - emissionTime, 9);
+          expect(emissionTime).toBeLessThan(time);
+        }
+      }
+    }
   });
 });
 
 describe("what the observer measures", () => {
   it("blueshifts an approaching source and redshifts a receding one", () => {
-    const approaching = receivedSignal(1, 0.6, HALF_TRACK, OBSERVER_DISTANCE, WAVELENGTH);
+    const approaching = receivedSignal(1, 0.6, HALF_TRACK, OBSERVER, WAVELENGTH);
     expect(approaching.cosTheta).toBeGreaterThan(0);
     expect(approaching.doppler).toBeGreaterThan(1);
     expect(approaching.observedWavelength).toBeLessThan(WAVELENGTH);
 
     // Late in the traverse the source is well past the observer.
-    const receding = receivedSignal(
-      traverseDuration(0.6, HALF_TRACK) - 1,
-      0.6,
-      HALF_TRACK,
-      OBSERVER_DISTANCE,
-      WAVELENGTH,
-    );
+    const receding = receivedSignal(traverseDuration(0.6, HALF_TRACK) - 1, 0.6, HALF_TRACK, OBSERVER, WAVELENGTH);
     expect(receding.cosTheta).toBeLessThan(0);
     expect(receding.doppler).toBeLessThan(1);
     expect(receding.observedWavelength).toBeGreaterThan(WAVELENGTH);
@@ -106,7 +119,7 @@ describe("what the observer measures", () => {
       // The light emitted from x = 0 arrives one observer-distance later.
       const emissionTime = (0 - startPosition(beta, HALF_TRACK)) / beta;
       const arrivalTime = emissionTime + OBSERVER_DISTANCE;
-      const signal = receivedSignal(arrivalTime, beta, HALF_TRACK, OBSERVER_DISTANCE, WAVELENGTH);
+      const signal = receivedSignal(arrivalTime, beta, HALF_TRACK, OBSERVER, WAVELENGTH);
 
       expect(signal.emissionX).toBeCloseTo(0, 8);
       expect(signal.cosTheta).toBeCloseTo(0, 8);
@@ -116,7 +129,7 @@ describe("what the observer measures", () => {
   });
 
   it("shifts nothing at all when the source is at rest", () => {
-    const signal = receivedSignal(12, 0, HALF_TRACK, OBSERVER_DISTANCE, WAVELENGTH);
+    const signal = receivedSignal(12, 0, HALF_TRACK, OBSERVER, WAVELENGTH);
     expect(signal.doppler).toBeCloseTo(1, 12);
     expect(signal.observedWavelength).toBeCloseTo(WAVELENGTH, 12);
     expect(signal.relativeBrightness).toBeCloseTo(1, 12);
@@ -125,9 +138,41 @@ describe("what the observer measures", () => {
   it("agrees with the bare Doppler formula given its own direction cosine", () => {
     for (const beta of BETA_SWEEP) {
       for (const time of [1, 5, 14]) {
-        const signal = receivedSignal(time, beta, HALF_TRACK, OBSERVER_DISTANCE, WAVELENGTH);
+        const signal = receivedSignal(time, beta, HALF_TRACK, OBSERVER, WAVELENGTH);
         expect(signal.doppler).toBeCloseTo(dopplerFactor(beta, signal.cosTheta), 12);
         expect(signal.relativeBrightness).toBeCloseTo(signal.doppler ** 4, 8);
+      }
+    }
+  });
+
+  it("puts the transverse moment wherever the observer is standing", () => {
+    // Moving the observer along the track moves the moment of the transverse
+    // redshift with them — it happens when the *emission* was straight across
+    // from where they stand, not when the source passes some fixed point. The
+    // shift is still exactly 1/γ, because that factor is time dilation and has
+    // nothing to do with geometry.
+    for (const observerX of [-3, 0, 2.5]) {
+      const observer = new Vector2(observerX, -OBSERVER_DISTANCE);
+      for (const beta of [0.3, 0.6, 0.9]) {
+        const emissionTime = (observerX - startPosition(beta, HALF_TRACK)) / beta;
+        const signal = receivedSignal(emissionTime + OBSERVER_DISTANCE, beta, HALF_TRACK, observer, WAVELENGTH);
+        expect(signal.emissionX).toBeCloseTo(observerX, 8);
+        expect(signal.cosTheta).toBeCloseTo(0, 8);
+        expect(signal.theta).toBeCloseTo(Math.PI / 2, 8);
+        expect(signal.doppler).toBeCloseTo(1 / gammaOf(beta), 8);
+      }
+    }
+  });
+
+  it("reports an angle that is the arccosine of its own direction cosine", () => {
+    for (const observer of OBSERVER_SWEEP) {
+      for (const beta of BETA_SWEEP) {
+        for (const time of [1, 5, 14]) {
+          const signal = receivedSignal(time, beta, HALF_TRACK, observer, WAVELENGTH);
+          expect(Math.cos(signal.theta)).toBeCloseTo(signal.cosTheta, 12);
+          expect(signal.theta).toBeGreaterThanOrEqual(0);
+          expect(signal.theta).toBeLessThanOrEqual(Math.PI);
+        }
       }
     }
   });
@@ -135,7 +180,7 @@ describe("what the observer measures", () => {
   it("stays finite across the parameter extremes", () => {
     for (const beta of BETA_SWEEP) {
       for (const time of [0, 0.01, 5, 40]) {
-        const signal = receivedSignal(time, beta, HALF_TRACK, OBSERVER_DISTANCE, WAVELENGTH);
+        const signal = receivedSignal(time, beta, HALF_TRACK, OBSERVER, WAVELENGTH);
         expect(Number.isFinite(signal.doppler)).toBe(true);
         expect(Number.isFinite(signal.observedWavelength)).toBe(true);
         expect(Number.isFinite(signal.relativeBrightness)).toBe(true);
