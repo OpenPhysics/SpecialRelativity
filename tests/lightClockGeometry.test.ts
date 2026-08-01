@@ -13,10 +13,12 @@ import { gammaOf, MAX_BETA } from "../src/common/model/lorentz.js";
 import {
   clockPosition,
   labHalfTickTime,
+  lightTriangle,
   photonHeight,
   photonTrail,
   tickCount,
   tickPeriod,
+  traverseStartPosition,
   traverseStartTime,
 } from "../src/light-clock/model/lightClockGeometry.js";
 
@@ -152,6 +154,141 @@ describe("the photon's zigzag", () => {
           expect(Number.isFinite(point.x)).toBe(true);
           expect(Number.isFinite(point.y)).toBe(true);
         }
+      }
+    }
+  });
+});
+
+describe("the light-travel triangle", () => {
+  it("closes: the legs and the hypotenuse satisfy Pythagoras", () => {
+    // The whole derivation of time dilation is this one identity, so it is the
+    // first thing to check — and checking it is not restating the code, which
+    // builds the three lengths from β, γ and Δt separately.
+    for (const beta of BETA_SWEEP.filter((b) => b !== 0)) {
+      for (const time of [0.37, 1.4, 3.9, 12.6]) {
+        const triangle = lightTriangle(time, beta, ARM, HALF_TRACK);
+        if (triangle === null) {
+          continue;
+        }
+        expect(triangle.clockDistance ** 2 + triangle.transverse ** 2).toBeCloseTo(triangle.lightDistance ** 2, 10);
+      }
+    }
+  });
+
+  it("has legs that match the corners it draws", () => {
+    // The lengths and the geometry are computed by different routes — one from
+    // β and γ, the other from clockPosition and photonHeight — so agreement says
+    // the picture is the picture of the numbers.
+    for (const beta of BETA_SWEEP.filter((b) => b !== 0)) {
+      for (const time of [0.37, 1.4, 3.9, 12.6]) {
+        const triangle = lightTriangle(time, beta, ARM, HALF_TRACK);
+        if (triangle === null) {
+          continue;
+        }
+        expect(Math.abs(triangle.corner.x - triangle.start.x)).toBeCloseTo(triangle.clockDistance, 10);
+        expect(Math.abs(triangle.photon.y - triangle.corner.y)).toBeCloseTo(triangle.transverse, 10);
+        expect(triangle.corner.y).toBeCloseTo(triangle.start.y, 12);
+        expect(triangle.corner.x).toBeCloseTo(triangle.photon.x, 12);
+      }
+    }
+  });
+
+  it("puts its hypotenuse on the photon's actual path", () => {
+    // The photon corner must be the same point the trail's last vertex is: the
+    // triangle is a reading of the zigzag, not a second drawing of it.
+    for (const beta of [-0.8, -0.3, 0.3, 0.8]) {
+      for (const time of [0.37, 1.4, 3.9]) {
+        const triangle = lightTriangle(time, beta, ARM, HALF_TRACK);
+        const trail = photonTrail(time, beta, ARM, HALF_TRACK);
+        if (triangle === null || trail.length === 0) {
+          continue;
+        }
+        const last = trail[trail.length - 1] as (typeof trail)[number];
+        expect(triangle.photon.x).toBeCloseTo(last.x, 10);
+        expect(triangle.photon.y).toBeCloseTo(last.y, 10);
+      }
+    }
+  });
+
+  it("grows from nothing at each mirror strike", () => {
+    // Just after a strike the triangle is tiny; just before the next, it spans a
+    // whole half-tick. The lengths are therefore bounded by that half-tick.
+    const beta = 0.6;
+    const halfTick = labHalfTickTime(ARM, beta);
+    for (const fraction of [0.01, 0.3, 0.7, 0.99]) {
+      const triangle = lightTriangle(3 * halfTick + fraction * halfTick, beta, ARM, HALF_TRACK);
+      expect(triangle).not.toBeNull();
+      expect((triangle as NonNullable<typeof triangle>).lightDistance).toBeCloseTo(fraction * halfTick, 8);
+    }
+  });
+
+  it("has no triangle to draw for a clock at rest, or before the clock starts", () => {
+    expect(lightTriangle(4, 0, ARM, HALF_TRACK)).toBeNull();
+    expect(lightTriangle(0, 0.6, ARM, HALF_TRACK)).toBeNull();
+    expect(lightTriangle(-1, 0.6, ARM, HALF_TRACK)).toBeNull();
+  });
+
+  it("never straddles a wrap of the rail", () => {
+    // Regression: a leg beginning exactly on a wrap once reported a base the
+    // whole width of the rail, because β·t_wrap rounded onto the far side of the
+    // modulo. The base can never exceed what the clock covers in one half-tick.
+    for (const beta of BETA_SWEEP.filter((b) => b !== 0)) {
+      const halfTick = labHalfTickTime(ARM, beta);
+      for (let step = 0; step < 400; step++) {
+        const time = step * 0.05;
+        const triangle = lightTriangle(time, beta, ARM, HALF_TRACK);
+        if (triangle === null) {
+          continue;
+        }
+        const base = Math.abs(triangle.corner.x - triangle.start.x);
+        expect(base).toBeCloseTo(triangle.clockDistance, 10);
+        expect(base).toBeLessThanOrEqual(Math.abs(beta) * halfTick + 1e-9);
+        expect(Math.abs(triangle.start.x)).toBeLessThanOrEqual(HALF_TRACK + 1e-9);
+      }
+    }
+  });
+
+  it("stays finite across the parameter extremes", () => {
+    for (const beta of BETA_SWEEP) {
+      for (const arm of [0.5, 1, 1.6]) {
+        for (const time of [0.05, 2, 25]) {
+          const triangle = lightTriangle(time, beta, arm, HALF_TRACK);
+          if (triangle === null) {
+            continue;
+          }
+          expect(Number.isFinite(triangle.lightDistance)).toBe(true);
+          expect(Number.isFinite(triangle.clockDistance)).toBe(true);
+          expect(Number.isFinite(triangle.transverse)).toBe(true);
+          expect(triangle.transverse).toBeLessThanOrEqual(arm + 1e-9);
+        }
+      }
+    }
+  });
+});
+
+describe("the start of a traverse", () => {
+  it("is the rail end the clock is coming from, once it has wrapped at all", () => {
+    // Position at a wrap is ambiguous by nature — the clock is leaving one end
+    // and arriving at the other — so this reports the arriving end exactly,
+    // instead of letting rounding pick.
+    expect(traverseStartPosition(0.5, 0.8, HALF_TRACK)).toBe(0);
+    expect(traverseStartPosition(0.5, -0.8, HALF_TRACK)).toBe(0);
+    expect(traverseStartPosition(20, 0.8, HALF_TRACK)).toBe(-HALF_TRACK);
+    expect(traverseStartPosition(20, -0.8, HALF_TRACK)).toBe(HALF_TRACK);
+    expect(traverseStartPosition(20, 0, HALF_TRACK)).toBe(0);
+  });
+
+  it("agrees with the trail's first vertex, and keeps it on the rail", () => {
+    for (const beta of BETA_SWEEP.filter((b) => b !== 0)) {
+      for (let step = 1; step < 300; step++) {
+        const time = step * 0.07;
+        const trail = photonTrail(time, beta, ARM, HALF_TRACK);
+        const first = trail[0];
+        if (first === undefined) {
+          continue;
+        }
+        expect(first.x).toBeCloseTo(traverseStartPosition(time, beta, HALF_TRACK), 10);
+        expect(Math.abs(first.x)).toBeLessThanOrEqual(HALF_TRACK + 1e-9);
       }
     }
   });

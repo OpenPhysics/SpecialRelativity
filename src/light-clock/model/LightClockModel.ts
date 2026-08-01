@@ -11,13 +11,24 @@
  * and the step-backward button needs no special handling.
  */
 
-import { BooleanProperty, DerivedProperty, type TReadOnlyProperty } from "scenerystack/axon";
-import type { Vector2 } from "scenerystack/dot";
+import { BooleanProperty, DerivedProperty, NumberProperty, type TReadOnlyProperty } from "scenerystack/axon";
+import { Range, type Vector2 } from "scenerystack/dot";
 import type { TModel } from "scenerystack/joist";
 import { SpecialRelativityModel } from "../../common/model/SpecialRelativityModel.js";
 import { TimeModel } from "../../common/TimeModel.js";
 import { LIGHT_CLOCK } from "../../SpecialRelativityConstants.js";
-import { clockPosition, photonHeight, photonTrail, tickCount, tickPeriod } from "./lightClockGeometry.js";
+import {
+  clockPosition,
+  type LightTriangle,
+  lightTriangle,
+  photonHeight,
+  photonTrail,
+  tickCount,
+  tickPeriod,
+} from "./lightClockGeometry.js";
+
+/** How far apart the mirrors may be set, in light-seconds. */
+export const ARM_LENGTH_RANGE = new Range(LIGHT_CLOCK.MIN_ARM_LENGTH, LIGHT_CLOCK.MAX_ARM_LENGTH);
 
 export class LightClockModel implements TModel {
   /** β, γ, and the boost derived from them. */
@@ -29,6 +40,13 @@ export class LightClockModel implements TModel {
    * falling out of step.
    */
   public readonly timer = new TimeModel(true);
+
+  /**
+   * Distance between the mirrors, in light-seconds — the same for both clocks,
+   * because they are the same apparatus. Adjustable so a student can check that
+   * the *ratio* of the tick counts is γ whatever the separation is.
+   */
+  public readonly armLengthProperty = new NumberProperty(LIGHT_CLOCK.ARM_LENGTH, { range: ARM_LENGTH_RANGE });
 
   /** Lab (coordinate) time in seconds. The stationary clock reads this directly. */
   public readonly labTimeProperty: TReadOnlyProperty<number>;
@@ -54,12 +72,26 @@ export class LightClockModel implements TModel {
   /** The moving photon's zigzag through the lab frame over the current traverse. */
   public readonly photonTrailProperty: TReadOnlyProperty<Vector2[]>;
 
+  /**
+   * The right triangle the moving photon is currently walking around, or null
+   * when there is none to draw (a clock at rest, or an instant that lands exactly
+   * on a mirror strike).
+   */
+  public readonly lightTriangleProperty: TReadOnlyProperty<LightTriangle | null>;
+
+  /** Proper seconds per tick: 2L, the same for both clocks because they are identical. */
+  public readonly tickPeriodProperty: TReadOnlyProperty<number>;
+
   /** Whether the zigzag path is drawn. On by default — it is the point of the screen. */
   public readonly showPhotonTrailProperty = new BooleanProperty(true);
 
-  public constructor() {
-    const armLength = LIGHT_CLOCK.ARM_LENGTH;
+  /**
+   * Whether the light-travel triangle is drawn. Off by default: it is the second
+   * thing to look at, once the zigzag itself has registered.
+   */
+  public readonly showTriangleProperty = new BooleanProperty(false);
 
+  public constructor() {
     this.labTimeProperty = this.timer.timeProperty;
 
     this.properTimeProperty = new DerivedProperty(
@@ -67,18 +99,25 @@ export class LightClockModel implements TModel {
       (time, gamma) => time / gamma,
     );
 
-    this.restTickCountProperty = new DerivedProperty([this.timer.timeProperty], (time) => tickCount(time, armLength));
+    this.tickPeriodProperty = new DerivedProperty([this.armLengthProperty], (armLength) => tickPeriod(armLength));
 
-    this.movingTickCountProperty = new DerivedProperty([this.properTimeProperty], (properTime) =>
-      tickCount(properTime, armLength),
+    this.restTickCountProperty = new DerivedProperty([this.timer.timeProperty, this.armLengthProperty], (time, arm) =>
+      tickCount(time, arm),
     );
 
-    this.restPhotonHeightProperty = new DerivedProperty([this.timer.timeProperty], (time) =>
-      photonHeight(time, armLength),
+    this.movingTickCountProperty = new DerivedProperty(
+      [this.properTimeProperty, this.armLengthProperty],
+      (properTime, arm) => tickCount(properTime, arm),
     );
 
-    this.movingPhotonHeightProperty = new DerivedProperty([this.properTimeProperty], (properTime) =>
-      photonHeight(properTime, armLength),
+    this.restPhotonHeightProperty = new DerivedProperty(
+      [this.timer.timeProperty, this.armLengthProperty],
+      (time, arm) => photonHeight(time, arm),
+    );
+
+    this.movingPhotonHeightProperty = new DerivedProperty(
+      [this.properTimeProperty, this.armLengthProperty],
+      (properTime, arm) => photonHeight(properTime, arm),
     );
 
     this.movingClockPositionProperty = new DerivedProperty(
@@ -87,14 +126,14 @@ export class LightClockModel implements TModel {
     );
 
     this.photonTrailProperty = new DerivedProperty(
-      [this.timer.timeProperty, this.relativity.betaProperty],
-      (time, beta) => photonTrail(time, beta, armLength, LIGHT_CLOCK.TRACK_HALF_LENGTH),
+      [this.timer.timeProperty, this.relativity.betaProperty, this.armLengthProperty],
+      (time, beta, arm) => photonTrail(time, beta, arm, LIGHT_CLOCK.TRACK_HALF_LENGTH),
     );
-  }
 
-  /** Proper seconds per tick — the same for both clocks, because they are identical. */
-  public get secondsPerTick(): number {
-    return tickPeriod(LIGHT_CLOCK.ARM_LENGTH);
+    this.lightTriangleProperty = new DerivedProperty(
+      [this.timer.timeProperty, this.relativity.betaProperty, this.armLengthProperty],
+      (time, beta, arm) => lightTriangle(time, beta, arm, LIGHT_CLOCK.TRACK_HALF_LENGTH),
+    );
   }
 
   public step(dt: number): void {
@@ -114,11 +153,16 @@ export class LightClockModel implements TModel {
   public reset(): void {
     this.relativity.reset();
     this.timer.reset();
+    this.armLengthProperty.reset();
     this.showPhotonTrailProperty.reset();
+    this.showTriangleProperty.reset();
   }
 
   public dispose(): void {
     this.showPhotonTrailProperty.dispose();
+    this.showTriangleProperty.dispose();
+    this.tickPeriodProperty.dispose();
+    this.lightTriangleProperty.dispose();
     this.photonTrailProperty.dispose();
     this.movingClockPositionProperty.dispose();
     this.movingPhotonHeightProperty.dispose();
@@ -126,6 +170,7 @@ export class LightClockModel implements TModel {
     this.movingTickCountProperty.dispose();
     this.restTickCountProperty.dispose();
     this.properTimeProperty.dispose();
+    this.armLengthProperty.dispose();
     this.relativity.dispose();
     this.timer.dispose();
   }

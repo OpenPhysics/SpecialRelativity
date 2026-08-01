@@ -86,3 +86,108 @@ export const simultaneityJump = (turnaround: Vector2): number => 2 * outboundBet
 /** Time on the traveller's own clock at lab time `labTime`: t/γ throughout, since |β| is constant. */
 export const travellerClockAt = (turnaround: Vector2, labTime: number): number =>
   labTime / gammaOf(outboundBeta(turnaround));
+
+/**
+ * One light pulse: where and when it left, and where and when it arrived. Both
+ * points are lab-frame `Vector2( x, ct )`, so the segment between them is drawn
+ * at 45° on the diagram — as every light ray must be.
+ */
+export type LightSignal = {
+  readonly emit: Vector2;
+  readonly receive: Vector2;
+};
+
+/**
+ * Safety stop on the pulse trains. The interval is a fixed constant and the trip
+ * is bounded, so this is never reached in practice; it exists so a degenerate
+ * turn (interval driven to zero by a future edit) cannot spin forever.
+ */
+const MAX_SIGNALS = 200;
+
+/**
+ * Pulses the stay-at-home twin sends out, one every `interval` of *their own*
+ * time, and where each one catches the traveller.
+ *
+ * An outbound pulse chases a receding target and takes t_e/(1−|β|) to land; once
+ * the traveller has turned it meets them head-on instead. Both cases come out of
+ * the same "the pulse moves at c, the traveller at β" bookkeeping, which is why
+ * they are solved separately here rather than papered over with one formula.
+ *
+ * ── What this is for ──────────────────────────────────────────────────────────
+ * The twin paradox is usually argued from coordinates, and a student's fair
+ * objection is that coordinates are exactly the thing they have been told not to
+ * trust. Pulses are not coordinates: each twin can *count* the flashes they
+ * actually see. Counting them settles the argument, and it settles it the same
+ * way — see the accounting checked in the tests.
+ */
+export const earthSignals = (turnaround: Vector2, interval: number): LightSignal[] => {
+  if (interval <= 0) {
+    return [];
+  }
+
+  const beta = outboundBeta(turnaround);
+  const speed = Math.abs(beta);
+  const turnTime = turnaround.y;
+  const reunion = reunionTime(turnaround);
+  const signals: LightSignal[] = [];
+
+  for (let index = 1; index <= MAX_SIGNALS; index++) {
+    const emitTime = index * interval;
+    if (emitTime > reunion) {
+      break;
+    }
+
+    // Chasing the outbound traveller; if that lands after the turn, the pulse
+    // actually meets them on the way back instead. The turn's distance is taken
+    // as speed·turnTime rather than from turnaround.x so it agrees with the
+    // worldline {@link travellerAt} draws, which is built from the same β.
+    const chase = emitTime / (1 - speed);
+    const receiveTime = chase <= turnTime ? chase : (emitTime + 2 * speed * turnTime) / (1 + speed);
+
+    if (receiveTime > reunion) {
+      break;
+    }
+    signals.push({
+      emit: new Vector2(0, emitTime),
+      receive: travellerAt(turnaround, receiveTime).position,
+    });
+  }
+  return signals;
+};
+
+/**
+ * Pulses the travelling twin sends home, one every `interval` of *their own*
+ * (proper) time, and where each one reaches Earth.
+ *
+ * Emission times are spaced by γ·interval in lab time — that stretch is the
+ * traveller's time dilation, expressed as something the Earth twin can count
+ * rather than something they must be told. Each pulse then flies straight back
+ * to x = 0, taking |x| to get there.
+ */
+export const travellerSignals = (turnaround: Vector2, interval: number): LightSignal[] => {
+  if (interval <= 0) {
+    return [];
+  }
+
+  const gamma = gammaOf(outboundBeta(turnaround));
+  const totalProperTime = travellerProperTime(turnaround);
+  const signals: LightSignal[] = [];
+
+  for (let index = 1; index <= MAX_SIGNALS; index++) {
+    const properTime = index * interval;
+    if (properTime > totalProperTime) {
+      break;
+    }
+    const emitTime = properTime * gamma;
+    const emit = travellerAt(turnaround, emitTime).position;
+    signals.push({
+      emit,
+      receive: new Vector2(0, emitTime + Math.abs(emit.x)),
+    });
+  }
+  return signals;
+};
+
+/** How many of `signals` have arrived by lab time `labTime`. */
+export const signalsReceivedBy = (signals: readonly LightSignal[], labTime: number): number =>
+  signals.filter((signal) => signal.receive.y <= labTime).length;

@@ -22,10 +22,12 @@ import type { TModel } from "scenerystack/joist";
 import {
   boostEvent,
   intervalSquared,
-  MAX_BETA,
+  properSeparation,
+  restFrameBeta,
   type Separation,
   Separation as SeparationValues,
   separationOf,
+  simultaneityBeta,
 } from "../../common/model/lorentz.js";
 import { SpacetimeEvent } from "../../common/model/SpacetimeEvent.js";
 import { SpecialRelativityModel } from "../../common/model/SpecialRelativityModel.js";
@@ -68,6 +70,13 @@ export class SpacetimeDiagramModel implements TModel {
   /** s² between the two events. Frame-independent — that is the whole point. */
   public readonly intervalProperty: TReadOnlyProperty<number>;
 
+  /**
+   * √|s²|: the proper time between the events when they are timelike separated,
+   * the proper distance when they are spacelike. Also frame-independent, and in
+   * units a student can hold onto in a way that ls² is not.
+   */
+  public readonly properSeparationProperty: TReadOnlyProperty<number>;
+
   /** Timelike, lightlike, or spacelike. Also frame-independent. */
   public readonly separationProperty: TReadOnlyProperty<Separation>;
 
@@ -84,12 +93,29 @@ export class SpacetimeDiagramModel implements TModel {
    */
   public readonly boostToBProperty: TReadOnlyProperty<number | null>;
 
+  /**
+   * β that makes A and B simultaneous, or null when no such frame exists — which
+   * is precisely when the pair is *not* spacelike, i.e. when one of them could
+   * have caused the other. The exact complement of {@link boostToBProperty}, and
+   * deliberately presented as one: between the two buttons, every pair of events
+   * on this screen affords exactly one of them.
+   */
+  public readonly boostToSimultaneityProperty: TReadOnlyProperty<number | null>;
+
   public readonly showLightConeProperty = new BooleanProperty(true);
   public readonly shadeLightConeProperty: BooleanProperty;
   public readonly showPrimedFrameProperty = new BooleanProperty(true);
   public readonly showPrimedGridProperty = new BooleanProperty(false);
   public readonly showSimultaneityProperty = new BooleanProperty(true);
   public readonly showHyperbolasProperty = new BooleanProperty(false);
+
+  /**
+   * Whether the selected event's coordinate projections onto both frames' axes
+   * are drawn. Off by default — it is the tool you reach for once you have
+   * noticed that the primed numbers in the panel are not the ones the rectangular
+   * grid gives you.
+   */
+  public readonly showProjectionsProperty = new BooleanProperty(false);
 
   public constructor() {
     const bounds = new Bounds2(-DIAGRAM.HALF_EXTENT, -DIAGRAM.HALF_EXTENT, DIAGRAM.HALF_EXTENT, DIAGRAM.HALF_EXTENT);
@@ -117,6 +143,10 @@ export class SpacetimeDiagramModel implements TModel {
       intervalSquared(b.minus(a)),
     );
 
+    this.properSeparationProperty = new DerivedProperty([this.intervalProperty], (interval) =>
+      properSeparation(interval),
+    );
+
     this.separationProperty = new DerivedProperty(
       [this.eventA.positionProperty, this.eventB.positionProperty],
       (a, b) => separationOf(a, b, LIGHTLIKE_TOLERANCE),
@@ -138,13 +168,14 @@ export class SpacetimeDiagramModel implements TModel {
       (separation) => separation === SeparationValues.SPACELIKE,
     );
 
-    this.boostToBProperty = new DerivedProperty([this.eventB.positionProperty], (position) => {
-      if (position.y === 0) {
-        return null;
-      }
-      const beta = position.x / position.y;
-      return Math.abs(beta) <= MAX_BETA ? beta : null;
-    });
+    this.boostToBProperty = new DerivedProperty([this.eventB.positionProperty], (position) =>
+      restFrameBeta(Vector2.ZERO, position),
+    );
+
+    this.boostToSimultaneityProperty = new DerivedProperty(
+      [this.eventA.positionProperty, this.eventB.positionProperty],
+      (a, b) => simultaneityBeta(a, b),
+    );
   }
 
   /** Nothing on this screen advances with time; the diagram is a static picture. */
@@ -163,13 +194,16 @@ export class SpacetimeDiagramModel implements TModel {
     this.showPrimedGridProperty.reset();
     this.showSimultaneityProperty.reset();
     this.showHyperbolasProperty.reset();
+    this.showProjectionsProperty.reset();
   }
 
   public dispose(): void {
+    this.boostToSimultaneityProperty.dispose();
     this.boostToBProperty.dispose();
     this.orderIsFrameDependentProperty.dispose();
     this.eventOrderProperty.dispose();
     this.separationProperty.dispose();
+    this.properSeparationProperty.dispose();
     this.intervalProperty.dispose();
     this.eventBPrimedProperty.dispose();
     this.eventAPrimedProperty.dispose();
@@ -180,6 +214,7 @@ export class SpacetimeDiagramModel implements TModel {
     this.showPrimedGridProperty.dispose();
     this.showSimultaneityProperty.dispose();
     this.showHyperbolasProperty.dispose();
+    this.showProjectionsProperty.dispose();
     this.eventA.dispose();
     this.eventB.dispose();
     this.relativity.dispose();

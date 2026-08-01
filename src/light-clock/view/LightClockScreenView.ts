@@ -13,9 +13,9 @@
  */
 
 import { DerivedProperty, PatternStringProperty } from "scenerystack/axon";
-import type { Vector2 } from "scenerystack/dot";
+import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
-import { Line, Node, Path, Text, VBox } from "scenerystack/scenery";
+import { HSeparator, Line, Node, Path, Text, VBox } from "scenerystack/scenery";
 import { ResetAllButton, TimeControlNode } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
@@ -33,7 +33,8 @@ import { StringManager } from "../../i18n/StringManager.js";
 import type { SpecialRelativityPreferencesModel } from "../../preferences/SpecialRelativityPreferencesModel.js";
 import SpecialRelativityColors from "../../SpecialRelativityColors.js";
 import { FONTS, LIGHT_CLOCK, SCREEN_VIEW_MARGIN } from "../../SpecialRelativityConstants.js";
-import type { LightClockModel } from "../model/LightClockModel.js";
+import { ARM_LENGTH_RANGE, type LightClockModel } from "../model/LightClockModel.js";
+import type { LightTriangle } from "../model/lightClockGeometry.js";
 import { LightClockApparatusNode } from "./LightClockApparatusNode.js";
 import { LightClockScreenSummaryContent } from "./LightClockScreenSummaryContent.js";
 
@@ -60,7 +61,11 @@ export class LightClockScreenView extends ScreenView {
     const a11y = strings.getLightClockA11yStrings();
 
     // ── The resting clock ─────────────────────────────────────────────────────
-    const restClock = new LightClockApparatusNode(model.restPhotonHeightProperty, clockStrings.restClockStringProperty);
+    const restClock = new LightClockApparatusNode(
+      model.restPhotonHeightProperty,
+      model.armLengthProperty,
+      clockStrings.restClockStringProperty,
+    );
     restClock.x = CLOCK_COLUMN_X;
     restClock.y = REST_CLOCK_BASELINE_Y;
     this.addChild(restClock);
@@ -86,8 +91,27 @@ export class LightClockScreenView extends ScreenView {
     trailPath.visibleProperty = model.showPhotonTrailProperty;
     this.addChild(trailPath);
 
+    // ── The light-travel triangle ─────────────────────────────────────────────
+    // Drawn beneath the apparatus so the mirrors and the photon stay legible on
+    // top of it. The two legs are dashed and the hypotenuse — the path the photon
+    // actually flew — is solid and in the photon's own colour, because it is the
+    // side the argument is about.
+    const triangleLegs = new Path(null, {
+      stroke: SpecialRelativityColors.apparatusColorProperty,
+      lineWidth: 1.5,
+      lineDash: [5, 4],
+    });
+    const triangleHypotenuse = new Path(null, {
+      stroke: SpecialRelativityColors.photonColorProperty,
+      lineWidth: 2.5,
+    });
+    const triangleLayer = new Node({ children: [triangleLegs, triangleHypotenuse] });
+    triangleLayer.visibleProperty = model.showTriangleProperty;
+    this.addChild(triangleLayer);
+
     const movingClock = new LightClockApparatusNode(
       model.movingPhotonHeightProperty,
+      model.armLengthProperty,
       clockStrings.movingClockStringProperty,
     );
     movingClock.y = MOVING_CLOCK_BASELINE_Y;
@@ -117,6 +141,26 @@ export class LightClockScreenView extends ScreenView {
     };
     model.photonTrailProperty.link(updateTrail);
 
+    const toView = (point: Vector2): Vector2 =>
+      new Vector2(
+        CLOCK_COLUMN_X + point.x * LIGHT_CLOCK.VIEW_SCALE,
+        MOVING_CLOCK_BASELINE_Y - point.y * LIGHT_CLOCK.VIEW_SCALE,
+      );
+
+    const updateTriangle = (triangle: LightTriangle | null): void => {
+      if (triangle === null) {
+        triangleLegs.shape = null;
+        triangleHypotenuse.shape = null;
+        return;
+      }
+      const start = toView(triangle.start);
+      const corner = toView(triangle.corner);
+      const photon = toView(triangle.photon);
+      triangleLegs.shape = new Shape().moveToPoint(start).lineToPoint(corner).lineToPoint(photon);
+      triangleHypotenuse.shape = new Shape().moveToPoint(start).lineToPoint(photon);
+    };
+    model.lightTriangleProperty.link(updateTriangle);
+
     // ── Readouts ──────────────────────────────────────────────────────────────
     const labTimeText = new PatternStringProperty(
       units.secondsStringProperty,
@@ -134,6 +178,24 @@ export class LightClockScreenView extends ScreenView {
     );
     const restTicksText = new DerivedProperty([model.restTickCountProperty], (ticks) => formatTickValue(ticks, 0));
     const movingTicksText = new DerivedProperty([model.movingTickCountProperty], (ticks) => formatTickValue(ticks, 0));
+
+    // The two tick periods side by side: 2L on the clock's own worldline, and the
+    // γ-stretched 2γL the lab measures. Their ratio is γ exactly, whatever the
+    // mirror separation is set to — which is the point of making it adjustable.
+    const restPeriodText = new PatternStringProperty(
+      units.secondsStringProperty,
+      { value: model.tickPeriodProperty },
+      { decimalPlaces: 2 },
+    );
+    const labPeriodProperty = new DerivedProperty(
+      [model.tickPeriodProperty, model.relativity.gammaProperty],
+      (period, gamma) => period * gamma,
+    );
+    const labPeriodText = new PatternStringProperty(
+      units.secondsStringProperty,
+      { value: labPeriodProperty },
+      { decimalPlaces: 2 },
+    );
 
     const rapidityRow = createReadoutRow(
       commonStrings.rapidityStringProperty,
@@ -169,6 +231,17 @@ export class LightClockScreenView extends ScreenView {
             movingTicksText,
             SpecialRelativityColors.properTimeColorProperty,
           ),
+          new HSeparator({ stroke: SpecialRelativityColors.panelBorderColorProperty }),
+          createReadoutRow(
+            clockStrings.restPeriodStringProperty,
+            restPeriodText,
+            SpecialRelativityColors.properTimeColorProperty,
+          ),
+          createReadoutRow(
+            clockStrings.labPeriodStringProperty,
+            labPeriodText,
+            SpecialRelativityColors.coordinateTimeColorProperty,
+          ),
         ],
       }),
     );
@@ -183,6 +256,15 @@ export class LightClockScreenView extends ScreenView {
       delta: 0.01,
     });
 
+    const armControl = createNumberControl(model.armLengthProperty, ARM_LENGTH_RANGE, {
+      titleProperty: clockStrings.mirrorSeparationStringProperty,
+      valuePatternProperty: units.lightSecondsStringProperty,
+      accessibleName: a11y.controls.mirrorSeparationStringProperty,
+      accessibleHelpText: a11y.controls.mirrorSeparationHelpStringProperty,
+      decimalPlaces: 1,
+      delta: LIGHT_CLOCK.ARM_LENGTH_DELTA,
+    });
+
     const trailCheckbox = createCheckbox(
       model.showPhotonTrailProperty,
       clockStrings.showTrailStringProperty,
@@ -190,8 +272,19 @@ export class LightClockScreenView extends ScreenView {
     );
     trailCheckbox.accessibleHelpText = a11y.controls.showTrailHelpStringProperty;
 
+    const triangleCheckbox = createCheckbox(
+      model.showTriangleProperty,
+      clockStrings.showTriangleStringProperty,
+      a11y.controls.showTriangleStringProperty,
+    );
+    triangleCheckbox.accessibleHelpText = a11y.controls.showTriangleHelpStringProperty;
+
     const controlPanel = new SpecialRelativityPanel(
-      new VBox({ align: "left", spacing: 14, children: [betaControl, trailCheckbox] }),
+      new VBox({
+        align: "left",
+        spacing: 12,
+        children: [betaControl, armControl, trailCheckbox, triangleCheckbox],
+      }),
     );
 
     const controlColumn = new VBox({
@@ -244,19 +337,23 @@ export class LightClockScreenView extends ScreenView {
     // Deterministic traversal order, independent of z-order. Reset All last.
     this.addChild(
       new Node({
-        pdomOrder: [betaControl, trailCheckbox, timeControlNode, resetAllButton],
+        pdomOrder: [betaControl, armControl, trailCheckbox, triangleCheckbox, timeControlNode, resetAllButton],
       }),
     );
 
     this.disposeEmitter.addListener(() => {
       model.movingClockPositionProperty.unlink(updateMovingClock);
       model.photonTrailProperty.unlink(updateTrail);
+      model.lightTriangleProperty.unlink(updateTriangle);
       labTimeText.dispose();
       properTimeText.dispose();
       gammaText.dispose();
       rapidityText.dispose();
       restTicksText.dispose();
       movingTicksText.dispose();
+      restPeriodText.dispose();
+      labPeriodText.dispose();
+      labPeriodProperty.dispose();
     });
   }
 

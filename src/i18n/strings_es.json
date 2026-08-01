@@ -11,7 +11,8 @@
     "lightSecondsSquared": "{{value}} sl²",
     "seconds": "{{value}} s",
     "nanometers": "{{value}} nm",
-    "beta": "{{value}} c"
+    "beta": "{{value}} c",
+    "degrees": "{{value}}°"
   },
   "common": {
     "velocity": "Velocidad relativa",
@@ -34,7 +35,11 @@
     "restTicks": "Tics en reposo",
     "movingTicks": "Tics en movimiento",
     "showTrail": "Trayectoria del fotón",
-    "takeaway": "Ambos fotones viajan a c. El que se mueve simplemente tiene más camino que recorrer, así que su reloj avanza más lento por un factor γ."
+    "takeaway": "Ambos fotones viajan a c. El que se mueve simplemente tiene más camino que recorrer, así que su reloj avanza más lento por un factor γ.",
+    "mirrorSeparation": "Separación de los espejos",
+    "showTriangle": "Triángulo del recorrido de la luz",
+    "restPeriod": "Periodo de un tic, reloj propio",
+    "labPeriod": "Periodo de un tic, laboratorio"
   },
   "spacetime": {
     "eventA": "A",
@@ -57,7 +62,11 @@
     "bFirst": "B ocurre primero",
     "simultaneous": "A y B son simultáneos",
     "orderAgreed": "Todos los sistemas coinciden en este orden.",
-    "orderDisputed": "Cambia β y el orden se invierte: ninguno de los sucesos causa el otro."
+    "orderDisputed": "Cambia β y el orden se invierte: ninguno de los sucesos causa el otro.",
+    "boostToSimultaneity": "Hacer simultáneos",
+    "showProjections": "Proyecciones de coordenadas",
+    "properTime": "Tiempo propio",
+    "properDistance": "Distancia propia"
   },
   "twinParadox": {
     "turnaround": "Giro",
@@ -71,7 +80,11 @@
     "playJourney": "Reproducir el viaje",
     "skippedLabel": "Saltado en el giro",
     "takeaway": "El giro es lo que rompe la simetría: en ese instante el «ahora» del viajero en la Tierra da un salto hacia delante.",
-    "dragHint": "Arrastra el suceso del giro para cambiar el viaje."
+    "dragHint": "Arrastra el suceso del giro para cambiar el viaje.",
+    "journey": "Viaje",
+    "showSignals": "Señales luminosas",
+    "seenByTraveller": "Destellos de la Tierra vistos",
+    "seenByEarth": "Destellos del viajero vistos"
   },
   "relativisticDoppler": {
     "source": "Fuente",
@@ -86,27 +99,33 @@
     "receding": "Alejándose: desplazada al rojo",
     "transverse": "Transversal: desplazada al rojo solo por γ",
     "outsideVisible": "fuera de la banda visible",
-    "takeaway": "Incluso justo de lado, sin acercarse ni alejarse, la luz se desplaza al rojo por un factor γ."
+    "takeaway": "Incluso justo de lado, sin acercarse ni alejarse, la luz se desplaza al rojo por un factor γ.",
+    "viewingAngle": "Ángulo de visión θ",
+    "showLightRay": "Rayo de luz y fuente retrasada"
   },
   "a11y": {
     "lightClock": {
       "screenSummary": {
         "playArea": "El área de juego muestra dos relojes de luz idénticos. El superior está en reposo en el laboratorio; el inferior pasa a una fracción ajustable de la velocidad de la luz, y su fotón traza un zigzag.",
-        "controlArea": "El área de control tiene un control deslizante de velocidad relativa, una casilla para la trayectoria del fotón, controles de tiempo y un botón Reiniciar todo que devuelve la simulación a su estado inicial.",
-        "interactionHint": "Cambia la velocidad relativa y observa cómo se separan las dos cuentas de tics."
+        "controlArea": "El área de control tiene un control deslizante de velocidad relativa, otro de separación de los espejos, casillas para la trayectoria del fotón y el triángulo del recorrido de la luz, controles de tiempo y un botón Reiniciar todo que devuelve la simulación a su estado inicial.",
+        "interactionHint": "Cambia la velocidad relativa y observa cómo se separan las dos cuentas de tics; luego cambia la separación de los espejos y observa que su cociente no varía."
       },
       "currentDetails": "A una velocidad relativa de {{beta}} veces la velocidad de la luz, gamma vale {{gamma}}. El reloj del laboratorio ha contado {{restTicks}} tics y el reloj en movimiento {{movingTicks}}.",
       "controls": {
         "velocity": "Velocidad relativa",
         "velocityHelp": "Velocidad del reloj de luz en movimiento, como fracción de la velocidad de la luz.",
         "showTrail": "Trayectoria del fotón",
-        "showTrailHelp": "Muestra el zigzag que el fotón en movimiento traza por el laboratorio."
+        "showTrailHelp": "Muestra el zigzag que el fotón en movimiento traza por el laboratorio.",
+        "mirrorSeparation": "Separación de los espejos",
+        "mirrorSeparationHelp": "Distancia entre los espejos de ambos relojes, en segundos luz. Un tic dura el doble de este valor.",
+        "showTriangle": "Triángulo del recorrido de la luz",
+        "showTriangleHelp": "Muestra el triángulo rectángulo cuyos catetos son lo que se desplazó el reloj y lo que cruzó el fotón, y cuya hipotenusa es lo que voló el fotón."
       }
     },
     "spacetime": {
       "screenSummary": {
         "playArea": "El área de juego muestra un diagrama de espacio-tiempo con el espacio en horizontal y el tiempo en vertical. Sobre él hay dos sucesos arrastrables, A y B, junto con el cono de luz que pasa por el origen y los ejes de un segundo sistema que se mueve a una velocidad ajustable.",
-        "controlArea": "El área de control tiene un control deslizante de velocidad relativa, casillas para el cono de luz, el sistema móvil, las líneas de simultaneidad y las hipérbolas invariantes, un botón que cambia al sistema del suceso B y un botón Reiniciar todo.",
+        "controlArea": "El área de control tiene un control deslizante de velocidad relativa, casillas para el cono de luz, el sistema móvil, las líneas de simultaneidad, las hipérbolas invariantes y las proyecciones de coordenadas, botones para cambiar al sistema del suceso B y al sistema donde los sucesos son simultáneos, y un botón Reiniciar todo.",
         "interactionHint": "Arrastra un suceso fuera del cono de luz y luego recorre la velocidad para ver cómo cambia cuál ocurre primero."
       },
       "currentDetails": "El suceso A está en x {{ax}}, ct {{act}} segundos luz; el suceso B está en x {{bx}}, ct {{bct}}. Su separación es {{separation}} con intervalo al cuadrado {{interval}}. A una velocidad relativa de {{beta}} veces la velocidad de la luz, {{order}}.",
@@ -124,28 +143,35 @@
         "showSimultaneity": "Línea de simultaneidad",
         "showHyperbolas": "Hipérbolas invariantes",
         "boostToB": "Cambiar al sistema del suceso B",
-        "boostToBHelp": "Ajusta la velocidad relativa al valor que deja al suceso B en reposo, si existe."
+        "boostToBHelp": "Ajusta la velocidad relativa al valor que deja al suceso B en reposo, si existe.",
+        "boostToSimultaneity": "Cambiar al sistema donde A y B son simultáneos",
+        "boostToSimultaneityHelp": "Ajusta la velocidad relativa al valor que hace que ambos sucesos ocurran a la vez, si existe.",
+        "showProjections": "Proyecciones de coordenadas"
       }
     },
     "twinParadox": {
       "screenSummary": {
         "playArea": "El área de juego muestra un diagrama de espacio-tiempo con dos líneas de universo que van del mismo inicio al mismo final: la línea vertical recta del gemelo que se queda y el camino de ida y vuelta del gemelo viajero a través de un suceso de giro arrastrable.",
-        "controlArea": "El área de control tiene una casilla para el «ahora» del viajero, controles de tiempo del viaje y un botón Reiniciar todo que devuelve la simulación a su estado inicial.",
-        "interactionHint": "Arrastra el suceso del giro, reproduce el viaje y compara los dos relojes."
+        "controlArea": "El área de control tiene un deslizador del viaje medido en segundos de la Tierra, casillas para el «ahora» del viajero y las señales luminosas, controles de tiempo del viaje y un botón Reiniciar todo que devuelve la simulación a su estado inicial.",
+        "interactionHint": "Arrastra el suceso del giro, reproduce el viaje y compara los dos relojes, o activa las señales luminosas y cuenta los destellos."
       },
       "currentDetails": "El giro está en x {{x}}, ct {{ct}} segundos luz, una velocidad de ida de {{beta}} veces la velocidad de la luz con gamma {{gamma}}. En el reencuentro el reloj de la Tierra marca {{earth}} segundos y el del viajero {{traveller}}.",
       "controls": {
         "turnaround": "Suceso del giro",
         "turnaroundHelp": "Arrastra para cambiar cuán lejos y cuán rápido va el gemelo viajero.",
         "showSimultaneity": "El «ahora» del viajero",
-        "showSimultaneityHelp": "Muestra qué momento en la Tierra llama «ahora» el viajero en cada instante."
+        "showSimultaneityHelp": "Muestra qué momento en la Tierra llama «ahora» el viajero en cada instante.",
+        "journey": "Tiempo de viaje",
+        "journeyHelp": "Recorre el viaje. Se mide en segundos del reloj de la Tierra y se detiene en el reencuentro.",
+        "showSignals": "Señales luminosas",
+        "showSignalsHelp": "Muestra los pulsos de luz que cada gemelo envía al otro una vez por segundo de su propio tiempo."
       }
     },
     "relativisticDoppler": {
       "screenSummary": {
-        "playArea": "El área de juego muestra una fuente de luz que pasa junto a un observador en reposo, emitiendo frentes de onda que se expanden. El color que recibe el observador pasa del azul al rojo según la fuente se aleja, y un lóbulo muestra cómo el brillo se concentra hacia delante.",
-        "controlArea": "El área de control tiene un control deslizante de velocidad de la fuente, otro de longitud de onda emitida, casillas de frentes de onda y de lóbulo, controles de tiempo y un botón Reiniciar todo.",
-        "interactionHint": "Pon una velocidad alta y observa cómo el color recibido recorre el espectro cuando la fuente pasa."
+        "playArea": "El área de juego muestra una fuente de luz que pasa junto a un observador que se puede arrastrar, emitiendo frentes de onda que se expanden. El color que recibe el observador pasa del azul al rojo según avanza la fuente, y un lóbulo muestra cómo se enfoca hacia delante el brillo de la fuente.",
+        "controlArea": "El área de control tiene un control deslizante de velocidad de la fuente, otro de longitud de onda emitida, casillas para los frentes de onda, el lóbulo de enfoque y el rayo de luz, controles de tiempo y un botón Reiniciar todo.",
+        "interactionHint": "Pon una velocidad alta de la fuente y observa cómo el color recibido recorre el espectro al pasar la fuente; después arrastra el observador y observa cómo cambia ese recorrido."
       },
       "currentDetails": "La fuente se mueve a {{beta}} veces la velocidad de la luz y emite {{emitted}} nanómetros. El observador recibe {{observed}} nanómetros, un factor Doppler de {{doppler}} y un brillo relativo de {{brightness}}.",
       "controls": {
@@ -154,7 +180,11 @@
         "wavelength": "Longitud de onda emitida",
         "wavelengthHelp": "Longitud de onda que la fuente emite en su propio sistema en reposo, en nanómetros.",
         "showWavefronts": "Frentes de onda",
-        "showBeaming": "Lóbulo de enfoque"
+        "showBeaming": "Lóbulo de enfoque",
+        "observer": "Observador",
+        "observerHelp": "Arrastra para cambiar dónde se sitúa el observador y, con ello, el ángulo con el que llega la luz.",
+        "showLightRay": "Rayo de luz y fuente retrasada",
+        "showLightRayHelp": "Muestra dónde estaba la fuente cuando emitió la luz que llega ahora, y el camino que siguió esa luz."
       }
     }
   },

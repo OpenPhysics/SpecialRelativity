@@ -24,23 +24,26 @@ Read [`doc/model.md`](doc/model.md) before changing anything physical, and
 
 | File | Purpose |
 |---|---|
-| `src/common/model/lorentz.ts` | **The heart of the sim.** Pure kinematics: γ, rapidity, boost matrix, interval, causal classification, hyperbolas, simultaneity lines, proper time, velocity addition, Doppler, aberration, beaming |
+| `src/common/model/lorentz.ts` | **The heart of the sim.** Pure kinematics: γ, rapidity, boost matrix, interval, causal classification, hyperbolas, simultaneity lines, axis projections, the rest and simultaneity frames of a pair, proper time, velocity addition, Doppler, aberration, beaming |
 | `src/common/model/SpecialRelativityModel.ts` | Property layer over `lorentz.ts` (β, γ, η, boost matrix). Each screen model owns its own instance — nothing is shared live between screens |
 | `src/common/model/SpacetimeEvent.ts` | One draggable event: position + drag bounds |
 | `src/common/view/MinkowskiDiagramNode.ts` | The spacetime diagram: bamboo frame, light cone, sheared primed axes and grid |
-| `src/common/view/SpacetimeEventNode.ts` | Draggable event marker (mouse + keyboard through one transform) |
+| `src/common/view/DraggableMarkerNode.ts` | Draggable labelled dot (mouse + keyboard through one transform) |
+| `src/common/view/SpacetimeEventNode.ts` | The above, bound to a `SpacetimeEvent` so position and bounds cannot be mismatched |
 | `src/common/view/controlHelpers.ts` | `createNumberControl` / `createCheckbox` / `createReadoutRow` — the controls every screen shares |
 | `src/common/TimeModel.ts` | Composable clock: play/pause, speed, `scaledDt`, step forward/back |
 | `src/SpecialRelativityColors.ts` | `ProfileColorProperty` table **and the sim's colour language** — read its header before adding a colour |
 | `src/SpecialRelativityConstants.ts` | Grouped `as const` blocks (`DIAGRAM`, `EVENT`, `LIGHT_CLOCK`, `TWIN`, `DOPPLER`, `FONTS`) |
-| `src/light-clock/model/lightClockGeometry.ts` | Photon height, tick counts, the zigzag trail |
-| `src/twin-paradox/model/twinJourney.ts` | Both worldlines, proper times, the simultaneity jump |
-| `src/relativistic-doppler/model/dopplerGeometry.ts` | Retarded emission solve, received signal, wavefronts, beaming lobe |
+| `src/light-clock/model/lightClockGeometry.ts` | Photon height, tick counts, the zigzag trail, the light-travel triangle |
+| `src/twin-paradox/model/twinJourney.ts` | Both worldlines, proper times, the simultaneity jump, the pulses the twins exchange |
+| `src/relativistic-doppler/model/dopplerGeometry.ts` | Retarded emission solve (for an arbitrary observer position), received signal, wavefronts, beaming lobe |
 
 ## Quirks worth knowing before you edit
 
-- **Everything animated is a closed form of `timer.timeProperty`.** Nothing integrates. This is why
-  step-backward works with no history buffer and why the animation cannot drift. Keep it that way.
+- **Everything animated is a closed form of one accumulating clock.** Nothing else carries state
+  between frames. This is why step-backward works with no history buffer and why the animation cannot
+  drift. Keep it that way. (The clock is `timer.timeProperty` on three screens; the Twin Paradox
+  screen's is `journeyTimeProperty`, in Earth seconds — see below.)
 - **The primed-frame shear happens in model space, never on the `ChartTransform`.** bamboo has no
   skew; every primed line is computed in unprimed `(x, ct)` and handed to the ordinary transform.
 - **`MinkowskiDiagramNode` derives its view height** from its width and the coordinate ranges, so
@@ -57,10 +60,20 @@ Read [`doc/model.md`](doc/model.md) before changing anything physical, and
   them is disposed. Do not "fix" it.
 - **The Twin Paradox screen has no `SpecialRelativityModel`** — its β is derived from the turn's
   position, not chosen. Adding a velocity slider there would create two sources of truth.
-- **`SpacetimeEventNode` removes its drag listeners before disposing them**, or `hotkeyManager` keeps
-  the disposed node reachable and `tests/memory-leak.test.ts` fails.
+- **The Twin Paradox screen ignores `timer.timeProperty`.** Its clock is `journeyTimeProperty`, in
+  seconds of *Earth* time, so the scrubber, the ct axis and the Earth readout are one number; the
+  `TimeModel` is kept only for play/pause and speed. The scrubber's reachable end follows the turn
+  through `NumberControl`'s `enabledRangeProperty` — clamping the Property inside its own listener is
+  reentrant and axon rejects it.
+- **`DraggableMarkerNode` removes its drag listeners before disposing them**, or `hotkeyManager` keeps
+  the disposed node reachable and `tests/memory-leak.test.ts` fails. This is why every draggable in
+  the sim goes through that one node.
+- **Never ask `clockPosition()` for the position at a rail wrap.** `traverseStartTime()` returns
+  exactly that instant, and `β·t_wrap` rounds onto either side of the modulo — the answer can flip to
+  the far end of the rail. Use `traverseStartPosition()`, which returns the rail end exactly. This was
+  a real bug in `photonTrail`, caught by the light-clock triangle's structural test.
 - **The Doppler screen uses the retarded emission event**, not the source's current position. That is
-  what makes the transverse redshift come out at exactly γ.
+  what makes the transverse redshift come out at exactly γ — from wherever the observer is standing.
 - **Beaming is D⁴** (bolometric flux). D³ and D² are also correct, for other measured quantities; the
   choice is documented in `lorentz.ts` and `doc/model.md`. Change it only together with the docs.
 
@@ -83,7 +96,7 @@ Full convention: [Baton/ACCESSIBILITY.md](https://github.com/OpenPhysics/Baton/b
 
 ## Testing
 
-`npm test` — Vitest, `happy-dom`, `--expose-gc`. 100 tests across six files.
+`npm test` — Vitest, `happy-dom`, `--expose-gc`. 129 tests across six files.
 
 | Path | Purpose |
 |---|---|

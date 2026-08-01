@@ -115,6 +115,18 @@ export const LIGHT_CLOCK = {
    */
   ARM_LENGTH: 1,
 
+  /**
+   * How far apart the mirrors can be dragged, in light-seconds. Adjustable
+   * because the *ratio* of the two tick counts is γ whatever L is: changing the
+   * separation moves both clocks together and leaves the dilation factor alone,
+   * which is a claim worth being able to test rather than take on faith. The
+   * range is kept modest so the taller clock still fits between the readouts and
+   * the rail.
+   */
+  MIN_ARM_LENGTH: 0.5,
+  MAX_ARM_LENGTH: 1.6,
+  ARM_LENGTH_DELTA: 0.1,
+
   /** Pixels per light-second in the clock apparatus view. */
   VIEW_SCALE: 92,
 
@@ -133,6 +145,11 @@ export const TWIN = {
   DEFAULT_TURNAROUND_X: 3,
   DEFAULT_TURNAROUND_CT: 4,
 
+  /** How far, and between which times, the turn may be dragged (light-seconds). */
+  MAX_TURNAROUND_X: 4.2,
+  MIN_TURNAROUND_CT: 0.6,
+  MAX_TURNAROUND_CT: 4.4,
+
   /**
    * Smallest allowed ratio of ct to |x| at the turnaround. Holding it strictly
    * above 1 keeps the outbound leg timelike; 1.04 corresponds to β ≈ 0.96, just
@@ -140,9 +157,22 @@ export const TWIN = {
    */
   MIN_TIME_TO_SPACE_RATIO: 1.04,
 
-  /** Seconds of real time one full journey animation takes at normal speed. */
-  JOURNEY_DURATION: 12,
+  /**
+   * Proper seconds between the light pulses each twin sends the other. One
+   * second gives a handful of pulses per leg on the default trip — enough to see
+   * the outbound spacing stretch and the inbound spacing crowd, few enough that
+   * the diagram does not turn into hatching.
+   */
+  SIGNAL_INTERVAL: 1,
 } as const;
+
+/**
+ * The latest reunion any allowed turn can produce, in seconds — the range of the
+ * Twin Paradox screen's journey scrubber. The journey clock *is* Earth's clock on
+ * that screen, so the slider is calibrated in the same seconds the Earth readout
+ * shows rather than in some separate animation time.
+ */
+export const MAX_REUNION_TIME = 2 * TWIN.MAX_TURNAROUND_CT;
 
 // ── Relativistic Doppler screen ───────────────────────────────────────────────
 
@@ -165,12 +195,24 @@ export const DOPPLER = {
   TRACK_HALF_LENGTH: 7,
 
   /**
-   * How far the observer sits off the source's line of travel, in light-seconds.
-   * Non-zero on purpose: with the observer directly on the track the angle would
-   * only ever be 0 or π and the transverse case — the one worth seeing, because
-   * it is redshifted with nothing receding — could never occur.
+   * Where the observer starts, in light-seconds: on the source's midpoint but
+   * off its line of travel. The offset is non-zero on purpose — with the observer
+   * directly on the track the angle would only ever be 0 or π and the transverse
+   * case, the one worth seeing because it is redshifted with nothing receding,
+   * could never occur.
    */
+  OBSERVER_X: 0,
   OBSERVER_DISTANCE: 2.6,
+
+  /**
+   * How far the observer may be dragged. The near limit keeps them clear of the
+   * track for the reason above — and because a ray grazing the source's own path
+   * makes the retarded-position construction degenerate just as it becomes most
+   * interesting to look at.
+   */
+  OBSERVER_MAX_X: 6,
+  OBSERVER_MIN_DISTANCE: 1.5,
+  OBSERVER_MAX_DISTANCE: 6.5,
 
   /** Samples around the beaming lobe. */
   LOBE_SAMPLES: 121,
@@ -191,5 +233,6 @@ SpecialRelativityNamespace.register("SpecialRelativityConstants", {
   EVENT,
   LIGHT_CLOCK,
   TWIN,
+  MAX_REUNION_TIME,
   DOPPLER,
 });

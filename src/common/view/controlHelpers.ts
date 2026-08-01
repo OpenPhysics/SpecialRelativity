@@ -10,10 +10,10 @@ import type { PhetioProperty, TReadOnlyProperty } from "scenerystack/axon";
 import { Dimension2, type Range } from "scenerystack/dot";
 import { HBox, type Node, Text, type TPaint } from "scenerystack/scenery";
 import { NumberControl } from "scenerystack/scenery-phet";
-import { Checkbox } from "scenerystack/sun";
+import { Checkbox, RectangularPushButton } from "scenerystack/sun";
 import SpecialRelativityColors from "../../SpecialRelativityColors.js";
 import { FONTS } from "../../SpecialRelativityConstants.js";
-import { FLAT_RECTANGULAR_BUTTON_OPTIONS } from "../SpecialRelativityButtonOptions.js";
+import { FLAT_RECTANGULAR_BUTTON_OPTIONS, LIGHT_SURFACE_TEXT_FILL } from "../SpecialRelativityButtonOptions.js";
 
 /** Width every control panel is laid out against, so panels line up down a column. */
 export const CONTROL_WIDTH = 220;
@@ -25,6 +25,13 @@ export type NumberControlConfig = {
   accessibleHelpText: TReadOnlyProperty<string>;
   decimalPlaces: number;
   delta: number;
+  /**
+   * A sub-range of `range` the value is currently allowed into, when that
+   * depends on something else in the model. The track still shows the full range
+   * — the Twin Paradox journey scrubber uses this so the slider is calibrated
+   * once, in Earth seconds, while the reachable end of it moves with the trip.
+   */
+  enabledRangeProperty?: TReadOnlyProperty<Range>;
 };
 
 /**
@@ -62,6 +69,9 @@ export const createNumberControl = (
     },
     accessibleName: config.accessibleName,
     accessibleHelpText: config.accessibleHelpText,
+    // Spread rather than assign: `exactOptionalPropertyTypes` rejects an explicit
+    // undefined, and "no sub-range" must mean "absent".
+    ...(config.enabledRangeProperty ? { enabledRangeProperty: config.enabledRangeProperty } : {}),
   });
 
 /** A themed checkbox with its label. */
@@ -69,13 +79,14 @@ export const createCheckbox = (
   property: PhetioProperty<boolean>,
   labelProperty: TReadOnlyProperty<string>,
   accessibleName: TReadOnlyProperty<string>,
+  width = CONTROL_WIDTH,
 ): Checkbox =>
   new Checkbox(
     property,
     new Text(labelProperty, {
       font: FONTS.READOUT,
       fill: SpecialRelativityColors.textColorProperty,
-      maxWidth: CONTROL_WIDTH - 30,
+      maxWidth: width - 30,
     }),
     {
       checkboxColor: SpecialRelativityColors.diagramAxisColorProperty,
@@ -83,6 +94,35 @@ export const createCheckbox = (
       accessibleName,
     },
   );
+
+/**
+ * A themed flat push button carrying a text label. The two "boost to …" buttons
+ * on the Spacetime Diagram screen are the only ones in the sim, and they are a
+ * matched pair, so they are built by one factory rather than configured twice.
+ */
+export const createPushButton = (
+  labelProperty: TReadOnlyProperty<string>,
+  config: {
+    accessibleName: TReadOnlyProperty<string>;
+    accessibleHelpText: TReadOnlyProperty<string>;
+    enabledProperty: TReadOnlyProperty<boolean>;
+    listener: () => void;
+    maxTextWidth?: number;
+  },
+): RectangularPushButton =>
+  new RectangularPushButton({
+    ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
+    content: new Text(labelProperty, {
+      font: FONTS.READOUT,
+      fill: LIGHT_SURFACE_TEXT_FILL,
+      maxWidth: config.maxTextWidth ?? CONTROL_WIDTH - 24,
+    }),
+    baseColor: SpecialRelativityColors.controlSurfaceColorProperty,
+    enabledProperty: config.enabledProperty,
+    listener: config.listener,
+    accessibleName: config.accessibleName,
+    accessibleHelpText: config.accessibleHelpText,
+  });
 
 /**
  * A "label ......... value" row. The label and value are pushed to opposite ends

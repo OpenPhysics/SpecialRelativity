@@ -13,14 +13,15 @@
 
 import { DerivedProperty, Multilink, PatternStringProperty, type TReadOnlyProperty } from "scenerystack/axon";
 import { LinePlot } from "scenerystack/bamboo";
-import { toFixed, type Vector2 } from "scenerystack/dot";
-import { HSeparator, Node, Text, VBox } from "scenerystack/scenery";
+import { toFixed, Vector2 } from "scenerystack/dot";
+import { Shape } from "scenerystack/kite";
+import { Circle, GridBox, HBox, HSeparator, Node, Path, Text, VBox } from "scenerystack/scenery";
 import { ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
-import { RectangularPushButton } from "scenerystack/sun";
 import { Animation, Easing } from "scenerystack/twixt";
 import {
+  axisProjections,
   HyperbolaBranch,
   hyperbolaSamples,
   intervalSquared,
@@ -29,16 +30,12 @@ import {
 } from "../../common/model/lorentz.js";
 import type { SpacetimeEvent } from "../../common/model/SpacetimeEvent.js";
 import { BETA_RANGE } from "../../common/model/SpecialRelativityModel.js";
-import {
-  FLAT_RECTANGULAR_BUTTON_OPTIONS,
-  FLAT_RESET_ALL_BUTTON_OPTIONS,
-  LIGHT_SURFACE_TEXT_FILL,
-} from "../../common/SpecialRelativityButtonOptions.js";
+import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../../common/SpecialRelativityButtonOptions.js";
 import { SpecialRelativityPanel } from "../../common/SpecialRelativityPanel.js";
 import {
-  CONTROL_WIDTH,
   createCheckbox,
   createNumberControl,
+  createPushButton,
   createReadoutRow,
   createSectionHeader,
   createSubHeader,
@@ -52,12 +49,19 @@ import { DIAGRAM, FONTS, SCREEN_VIEW_MARGIN } from "../../SpecialRelativityConst
 import { EventOrder, type SpacetimeDiagramModel } from "../model/SpacetimeDiagramModel.js";
 import { SpacetimeDiagramScreenSummaryContent } from "./SpacetimeDiagramScreenSummaryContent.js";
 
-/** Seconds the "boost to B's frame" animation takes. */
+/** Seconds a "boost to …" animation takes. */
 const BOOST_ANIMATION_DURATION = 1.1;
 
 /** Where the diagram sits, chosen to leave room for the control column. */
-const DIAGRAM_LEFT = 96;
+const DIAGRAM_LEFT = 74;
 const DIAGRAM_TOP = 48;
+
+/**
+ * This screen's panels are wider than the shared CONTROL_WIDTH so the checkboxes
+ * can sit two to a row. It carries the most controls of the four screens, and a
+ * single column of eight of them will not clear the Reset All button.
+ */
+const PANEL_WIDTH = 300;
 
 export class SpacetimeDiagramScreenView extends ScreenView {
   public constructor(
@@ -172,13 +176,77 @@ export class SpacetimeDiagramScreenView extends ScreenView {
       updateSimultaneity,
     );
 
+    // ── Coordinate projections onto both frames' axes ─────────────────────────
+    // Reading a coordinate off a skewed mesh is the step students reliably get
+    // wrong, because the rectangular habit — drop a perpendicular — is exactly
+    // the wrong move. These four lines show the right one: travel parallel to the
+    // *other* axis. The lab pair is drawn as well, in the lab's own grey, so the
+    // comparison is on screen rather than in memory.
+    const labProjections = new Path(null, {
+      stroke: SpecialRelativityColors.diagramAxisColorProperty,
+      lineWidth: 1.5,
+      lineDash: [3, 4],
+    });
+    const primedProjections = new Path(null, {
+      stroke: SpecialRelativityColors.simultaneityColorProperty,
+      lineWidth: 2,
+      lineDash: [6, 4],
+    });
+
+    // A dot at each foot. Without them the primed lines are hard to tell from the
+    // primed axes they end on — which is the one distinction the whole feature
+    // exists to draw, since the foot *is* the coordinate reading.
+    const footMarkers = [
+      { marker: new Circle(3.5, { fill: SpecialRelativityColors.diagramAxisColorProperty }), primed: false },
+      { marker: new Circle(3.5, { fill: SpecialRelativityColors.diagramAxisColorProperty }), primed: false },
+      { marker: new Circle(4, { fill: SpecialRelativityColors.simultaneityColorProperty }), primed: true },
+      { marker: new Circle(4, { fill: SpecialRelativityColors.simultaneityColorProperty }), primed: true },
+    ];
+
+    const projectionLayer = new Node({
+      children: [labProjections, primedProjections, ...footMarkers.map((foot) => foot.marker)],
+      visibleProperty: model.showProjectionsProperty,
+    });
+    diagram.plotLayer.addChild(projectionLayer);
+
+    const updateProjections = (): void => {
+      const event = model.selectedEventProperty.value.positionProperty.value;
+      const view = (point: Vector2): Vector2 => diagram.chartTransform.modelToViewPosition(point);
+
+      const eventView = view(event);
+      const onXAxis = new Vector2(event.x, 0);
+      const onCtAxis = new Vector2(0, event.y);
+      labProjections.shape = new Shape().moveToPoint(view(onXAxis)).lineToPoint(eventView).lineToPoint(view(onCtAxis));
+
+      const { ontoSpaceAxis, ontoTimeAxis } = axisProjections(event, model.relativity.betaProperty.value);
+      primedProjections.shape = new Shape()
+        .moveToPoint(view(ontoSpaceAxis))
+        .lineToPoint(eventView)
+        .lineToPoint(view(ontoTimeAxis));
+
+      [onXAxis, onCtAxis, ontoSpaceAxis, ontoTimeAxis].forEach((foot, index) => {
+        const entry = footMarkers[index];
+        if (entry) {
+          entry.marker.center = view(foot);
+        }
+      });
+    };
+    const projectionMultilink = Multilink.multilink(
+      [
+        model.selectedEventProperty,
+        model.eventA.positionProperty,
+        model.eventB.positionProperty,
+        model.relativity.betaProperty,
+      ],
+      updateProjections,
+    );
+
     // ── The draggable events ──────────────────────────────────────────────────
     const eventANode = new SpacetimeEventNode(model.eventA, diagram.modelViewTransform, {
       fill: SpecialRelativityColors.eventAColorProperty,
       labelStringProperty: diagramStrings.eventAStringProperty,
       accessibleName: a11y.controls.eventAStringProperty,
       accessibleHelpText: a11y.controls.eventAHelpStringProperty,
-      dragBoundsProperty: model.eventA.dragBoundsProperty,
       onPress: () => {
         model.selectedEventProperty.value = model.eventA;
       },
@@ -188,7 +256,6 @@ export class SpacetimeDiagramScreenView extends ScreenView {
       labelStringProperty: diagramStrings.eventBStringProperty,
       accessibleName: a11y.controls.eventBStringProperty,
       accessibleHelpText: a11y.controls.eventBHelpStringProperty,
-      dragBoundsProperty: model.eventB.dragBoundsProperty,
       onPress: () => {
         model.selectedEventProperty.value = model.eventB;
       },
@@ -209,6 +276,28 @@ export class SpacetimeDiagramScreenView extends ScreenView {
       units.lightSecondsSquaredStringProperty,
       { value: model.intervalProperty },
       { decimalPlaces: 2 },
+    );
+
+    // √|s²| with a label that switches: the same number is the proper time along
+    // a timelike separation and the proper distance across a spacelike one, and
+    // naming which is which is most of what makes it useful.
+    const properSeparationText = new PatternStringProperty(
+      units.secondsStringProperty,
+      { value: model.properSeparationProperty },
+      { decimalPlaces: 2 },
+    );
+    const properDistanceText = new PatternStringProperty(
+      units.lightSecondsStringProperty,
+      { value: model.properSeparationProperty },
+      { decimalPlaces: 2 },
+    );
+    const properSeparationValueText = new DerivedProperty(
+      [model.separationProperty, properSeparationText, properDistanceText],
+      (separation, asTime, asDistance) => (separation === Separation.SPACELIKE ? asDistance : asTime),
+    );
+    const properSeparationLabelText = new DerivedProperty(
+      [model.separationProperty, diagramStrings.properTimeStringProperty, diagramStrings.properDistanceStringProperty],
+      (separation, properTime, properDistance) => (separation === Separation.SPACELIKE ? properDistance : properTime),
     );
 
     const separationText = new DerivedProperty(
@@ -253,7 +342,7 @@ export class SpacetimeDiagramScreenView extends ScreenView {
     const verdict = new Text(verdictText, {
       font: FONTS.READOUT,
       fill: SpecialRelativityColors.secondaryTextColorProperty,
-      maxWidth: CONTROL_WIDTH,
+      maxWidth: PANEL_WIDTH,
     });
 
     const readoutPanel = new SpecialRelativityPanel(
@@ -267,30 +356,50 @@ export class SpacetimeDiagramScreenView extends ScreenView {
           // would leave "Lab frame" appearing twice with only colour to say which
           // row was which.
           createSubHeader(commonStrings.labFrameStringProperty),
-          createReadoutRow(diagramStrings.eventAStringProperty, aLabText, SpecialRelativityColors.eventAColorProperty),
-          createReadoutRow(diagramStrings.eventBStringProperty, bLabText, SpecialRelativityColors.eventBColorProperty),
+          createReadoutRow(
+            diagramStrings.eventAStringProperty,
+            aLabText,
+            SpecialRelativityColors.eventAColorProperty,
+            PANEL_WIDTH,
+          ),
+          createReadoutRow(
+            diagramStrings.eventBStringProperty,
+            bLabText,
+            SpecialRelativityColors.eventBColorProperty,
+            PANEL_WIDTH,
+          ),
           createSubHeader(commonStrings.movingFrameStringProperty),
           createReadoutRow(
             diagramStrings.eventAStringProperty,
             aPrimedText,
             SpecialRelativityColors.eventAColorProperty,
+            PANEL_WIDTH,
           ),
           createReadoutRow(
             diagramStrings.eventBStringProperty,
             bPrimedText,
             SpecialRelativityColors.eventBColorProperty,
+            PANEL_WIDTH,
           ),
           new HSeparator({ stroke: SpecialRelativityColors.panelBorderColorProperty }),
           createReadoutRow(
             diagramStrings.intervalStringProperty,
             intervalText,
             SpecialRelativityColors.hyperbolaColorProperty,
+            PANEL_WIDTH,
           ),
-          createReadoutRow(diagramStrings.separationStringProperty, separationText),
+          createReadoutRow(
+            properSeparationLabelText,
+            properSeparationValueText,
+            SpecialRelativityColors.hyperbolaColorProperty,
+            PANEL_WIDTH,
+          ),
+          createReadoutRow(diagramStrings.separationStringProperty, separationText, undefined, PANEL_WIDTH),
           createReadoutRow(
             diagramStrings.orderStringProperty,
             orderText,
             SpecialRelativityColors.primedAxisColorProperty,
+            PANEL_WIDTH,
           ),
           verdict,
         ],
@@ -307,78 +416,114 @@ export class SpacetimeDiagramScreenView extends ScreenView {
       delta: 0.01,
     });
 
+    // ── The two boost buttons ─────────────────────────────────────────────────
+    // A matched pair, and deliberately shown as one: for any placement of A and B
+    // exactly one of them is available. "Boost to B" needs a timelike separation
+    // from the origin, "make them simultaneous" needs a spacelike separation
+    // between the events, and the greyed-out half is as much of the lesson as the
+    // live one — no change of frame reaches a spacelike-separated event, and none
+    // reorders a timelike pair.
     let boostAnimation: Animation | null = null;
+    const animateBetaTo = (target: number | null): void => {
+      if (target === null) {
+        return;
+      }
+      boostAnimation?.stop();
+      boostAnimation = new Animation({
+        property: model.relativity.betaProperty,
+        to: target,
+        duration: BOOST_ANIMATION_DURATION,
+        easing: Easing.CUBIC_IN_OUT,
+      });
+      boostAnimation.start();
+    };
+
+    const buttonTextWidth = PANEL_WIDTH / 2 - 28;
+
     const boostEnabledProperty = new DerivedProperty([model.boostToBProperty], (beta) => beta !== null);
-    const boostButton = new RectangularPushButton({
-      ...FLAT_RECTANGULAR_BUTTON_OPTIONS,
-      content: new Text(diagramStrings.boostToBStringProperty, {
-        font: FONTS.READOUT,
-        fill: LIGHT_SURFACE_TEXT_FILL,
-        maxWidth: CONTROL_WIDTH - 24,
-      }),
-      baseColor: SpecialRelativityColors.controlSurfaceColorProperty,
-      // Disabled exactly when B is not timelike-separated from the origin. The
-      // greyed-out button is itself the lesson: no change of frame reaches a
-      // spacelike-separated event, because doing so would mean outrunning light.
-      enabledProperty: boostEnabledProperty,
-      listener: () => {
-        const target = model.boostToBProperty.value;
-        if (target === null) {
-          return;
-        }
-        boostAnimation?.stop();
-        boostAnimation = new Animation({
-          property: model.relativity.betaProperty,
-          to: target,
-          duration: BOOST_ANIMATION_DURATION,
-          easing: Easing.CUBIC_IN_OUT,
-        });
-        boostAnimation.start();
-      },
+    const boostButton = createPushButton(diagramStrings.boostToBStringProperty, {
       accessibleName: a11y.controls.boostToBStringProperty,
       accessibleHelpText: a11y.controls.boostToBHelpStringProperty,
+      enabledProperty: boostEnabledProperty,
+      listener: () => animateBetaTo(model.boostToBProperty.value),
+      maxTextWidth: buttonTextWidth,
     });
 
+    const simultaneityEnabledProperty = new DerivedProperty(
+      [model.boostToSimultaneityProperty],
+      (beta) => beta !== null,
+    );
+    const simultaneityButton = createPushButton(diagramStrings.boostToSimultaneityStringProperty, {
+      accessibleName: a11y.controls.boostToSimultaneityStringProperty,
+      accessibleHelpText: a11y.controls.boostToSimultaneityHelpStringProperty,
+      enabledProperty: simultaneityEnabledProperty,
+      listener: () => animateBetaTo(model.boostToSimultaneityProperty.value),
+      maxTextWidth: buttonTextWidth,
+    });
+
+    const buttonRow = new HBox({ children: [boostButton, simultaneityButton], spacing: 8, stretch: true });
+
+    const checkboxWidth = PANEL_WIDTH / 2 - 4;
     const checkboxes = [
       createCheckbox(
         model.showLightConeProperty,
         diagramStrings.showLightConeStringProperty,
         a11y.controls.showLightConeStringProperty,
+        checkboxWidth,
       ),
       createCheckbox(
         model.shadeLightConeProperty,
         diagramStrings.shadeLightConeStringProperty,
         a11y.controls.shadeLightConeStringProperty,
+        checkboxWidth,
       ),
       createCheckbox(
         model.showPrimedFrameProperty,
         diagramStrings.showPrimedFrameStringProperty,
         a11y.controls.showPrimedFrameStringProperty,
+        checkboxWidth,
       ),
       createCheckbox(
         model.showPrimedGridProperty,
         diagramStrings.showPrimedGridStringProperty,
         a11y.controls.showPrimedGridStringProperty,
+        checkboxWidth,
       ),
       createCheckbox(
         model.showSimultaneityProperty,
         diagramStrings.showSimultaneityStringProperty,
         a11y.controls.showSimultaneityStringProperty,
+        checkboxWidth,
       ),
       createCheckbox(
         model.showHyperbolasProperty,
         diagramStrings.showHyperbolasStringProperty,
         a11y.controls.showHyperbolasStringProperty,
+        checkboxWidth,
+      ),
+      createCheckbox(
+        model.showProjectionsProperty,
+        diagramStrings.showProjectionsStringProperty,
+        a11y.controls.showProjectionsStringProperty,
+        checkboxWidth,
       ),
     ];
 
-    // Spacing is tight on purpose: this screen carries the most controls of the
-    // four, and the column has to clear the Reset All button in the corner.
+    // Two to a row: this screen carries the most controls of the four, and a
+    // single column of seven checkboxes does not clear the Reset All button.
+    const checkboxGrid = new GridBox({
+      autoColumns: 2,
+      xSpacing: 8,
+      ySpacing: 6,
+      xAlign: "left",
+      children: checkboxes,
+    });
+
     const controlPanel = new SpecialRelativityPanel(
       new VBox({
         align: "left",
-        spacing: 6,
-        children: [betaControl, boostButton, ...checkboxes],
+        spacing: 10,
+        children: [betaControl, buttonRow, checkboxGrid],
       }),
     );
 
@@ -408,7 +553,15 @@ export class SpacetimeDiagramScreenView extends ScreenView {
     // should reach them before the display toggles. Reset All last.
     this.addChild(
       new Node({
-        pdomOrder: [eventANode, eventBNode, betaControl, boostButton, ...checkboxes, resetAllButton],
+        pdomOrder: [
+          eventANode,
+          eventBNode,
+          betaControl,
+          boostButton,
+          simultaneityButton,
+          ...checkboxes,
+          resetAllButton,
+        ],
       }),
     );
 
@@ -416,15 +569,21 @@ export class SpacetimeDiagramScreenView extends ScreenView {
       preferences.shadeLightConeProperty.unlink(applyShadePreference);
       hyperbolaMultilink.dispose();
       simultaneityMultilink.dispose();
+      projectionMultilink.dispose();
       aLabText.dispose();
       bLabText.dispose();
       aPrimedText.dispose();
       bPrimedText.dispose();
       intervalText.dispose();
+      properSeparationValueText.dispose();
+      properSeparationLabelText.dispose();
+      properSeparationText.dispose();
+      properDistanceText.dispose();
       separationText.dispose();
       orderText.dispose();
       verdictText.dispose();
       boostEnabledProperty.dispose();
+      simultaneityEnabledProperty.dispose();
     });
   }
 

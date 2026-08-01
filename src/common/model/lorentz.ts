@@ -143,6 +143,91 @@ export const separationOf = (from: Vector2, to: Vector2, tolerance = 0): Separat
 };
 
 /**
+ * √|s²| — the invariant magnitude of a separation, in whichever units the case
+ * makes meaningful:
+ *
+ *  - **timelike** (s² < 0): the *proper time* a clock carried from one event to
+ *    the other would read;
+ *  - **spacelike** (s² > 0): the *proper distance* between them, measured in the
+ *    one frame that calls them simultaneous.
+ *
+ * The same square root answers both questions because they are the same question
+ * asked along the two kinds of straight line spacetime has.
+ */
+export const properSeparation = (sSquared: number): number => Math.sqrt(Math.abs(sSquared));
+
+/**
+ * β of the frame in which `from` and `to` happen at the same *place*, or null if
+ * no allowed frame does.
+ *
+ * Equal x′ means γ(x_to − β·ct_to) = γ(x_from − β·ct_from), so β = Δx/Δct. That
+ * lands below 1 exactly when the pair is timelike — which is the statement that
+ * only a timelike-separated pair of events can both happen to the same object.
+ */
+export const restFrameBeta = (from: Vector2, to: Vector2): number | null => {
+  const displacement = to.minus(from);
+  if (displacement.y === 0) {
+    return null;
+  }
+  const beta = displacement.x / displacement.y;
+  return Math.abs(beta) <= MAX_BETA ? beta : null;
+};
+
+/**
+ * β of the frame in which `from` and `to` happen at the same *time*, or null if
+ * no allowed frame does. The exact mirror image of {@link restFrameBeta}.
+ *
+ * Equal ct′ means γ(ct_to − β·x_to) = γ(ct_from − β·x_from), so β = Δct/Δx —
+ * below 1 exactly when the pair is spacelike. So every spacelike pair is
+ * simultaneous for somebody, and no timelike pair is for anybody, which is the
+ * whole of "the order is disputed only where causality does not depend on it".
+ */
+export const simultaneityBeta = (from: Vector2, to: Vector2): number | null => {
+  const displacement = to.minus(from);
+  if (displacement.x === 0) {
+    return null;
+  }
+  const beta = displacement.y / displacement.x;
+  return Math.abs(beta) <= MAX_BETA ? beta : null;
+};
+
+/** Where an event's coordinate projections meet the two primed axes. */
+export type AxisProjections = {
+  /** Foot on the x′ axis, reached by travelling parallel to ct′ — reads off x′. */
+  readonly ontoSpaceAxis: Vector2;
+  /** Foot on the ct′ axis, reached by travelling parallel to x′ — reads off ct′. */
+  readonly ontoTimeAxis: Vector2;
+};
+
+/**
+ * The two feet you drop from an event to read its coordinates in the frame moving
+ * at β, returned in *lab* coordinates so the view can draw them on the ordinary
+ * undistorted diagram.
+ *
+ * Reading a coordinate off a skewed mesh is the one step students reliably get
+ * wrong: you do **not** drop a perpendicular. You travel parallel to the *other*
+ * axis — parallel to ct′ to reach the x′ axis, parallel to x′ to reach the ct′
+ * axis — because "same x′" is a line parallel to ct′, not a line at right angles
+ * to anything. At β = 0 the two directions become vertical and horizontal and the
+ * familiar rectangular recipe falls out as the special case it is.
+ *
+ * The feet are exactly the inverse boosts of `(x′, 0)` and `(0, ct′)`, which is
+ * what {@link tests/lorentz.test.ts} checks rather than restating the algebra.
+ */
+export const axisProjections = (event: Vector2, beta: number): AxisProjections => {
+  const b = sanitizeBeta(beta);
+  const gammaSquared = 1 / (1 - b * b);
+  // Distances along the two axis directions (β,1) and (1,β) from the event to
+  // each foot. Both reduce to the familiar −ct and −x at β = 0.
+  const alongTimeAxis = -gammaSquared * (event.y - b * event.x);
+  const alongSpaceAxis = -gammaSquared * (event.x - b * event.y);
+  return {
+    ontoSpaceAxis: new Vector2(event.x + alongTimeAxis * b, event.y + alongTimeAxis),
+    ontoTimeAxis: new Vector2(event.x + alongSpaceAxis, event.y + alongSpaceAxis * b),
+  };
+};
+
+/**
  * Samples one branch of the invariant hyperbola s² = constant — the locus of every
  * event that some inertial frame would place at the same interval from the origin.
  * Boosting slides an event *along* one of these curves, which is what makes them

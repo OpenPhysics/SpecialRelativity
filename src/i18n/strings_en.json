@@ -11,7 +11,8 @@
     "lightSecondsSquared": "{{value}} ls²",
     "seconds": "{{value}} s",
     "nanometers": "{{value}} nm",
-    "beta": "{{value}} c"
+    "beta": "{{value}} c",
+    "degrees": "{{value}}°"
   },
   "common": {
     "velocity": "Relative velocity",
@@ -34,7 +35,11 @@
     "restTicks": "Ticks at rest",
     "movingTicks": "Ticks moving",
     "showTrail": "Photon path",
-    "takeaway": "Both photons travel at c. The moving one simply has farther to go, so its clock ticks slower by γ."
+    "takeaway": "Both photons travel at c. The moving one simply has farther to go, so its clock ticks slower by γ.",
+    "mirrorSeparation": "Mirror separation",
+    "showTriangle": "Light-travel triangle",
+    "restPeriod": "Tick period, own clock",
+    "labPeriod": "Tick period, lab clock"
   },
   "spacetime": {
     "eventA": "A",
@@ -57,7 +62,11 @@
     "bFirst": "B is first",
     "simultaneous": "A and B are simultaneous",
     "orderAgreed": "Every frame agrees on this order.",
-    "orderDisputed": "Change β and the order flips — neither event causes the other."
+    "orderDisputed": "Change β and the order flips — neither event causes the other.",
+    "boostToSimultaneity": "Make simultaneous",
+    "showProjections": "Coordinate projections",
+    "properTime": "Proper time",
+    "properDistance": "Proper distance"
   },
   "twinParadox": {
     "turnaround": "Turn",
@@ -71,7 +80,11 @@
     "playJourney": "Play journey",
     "skippedLabel": "Skipped at the turn",
     "takeaway": "The turn is what breaks the symmetry: at that instant the traveller's \"now\" on Earth jumps forward.",
-    "dragHint": "Drag the turn event to change the trip."
+    "dragHint": "Drag the turn event to change the trip.",
+    "journey": "Journey",
+    "showSignals": "Light signals",
+    "seenByTraveller": "Earth flashes seen",
+    "seenByEarth": "Traveller flashes seen"
   },
   "relativisticDoppler": {
     "source": "Source",
@@ -86,27 +99,33 @@
     "receding": "Receding — redshifted",
     "transverse": "Transverse — redshifted by γ alone",
     "outsideVisible": "outside the visible band",
-    "takeaway": "Even straight across, with nothing approaching or receding, the light is redshifted by γ."
+    "takeaway": "Even straight across, with nothing approaching or receding, the light is redshifted by γ.",
+    "viewingAngle": "Viewing angle θ",
+    "showLightRay": "Light ray and lagged source"
   },
   "a11y": {
     "lightClock": {
       "screenSummary": {
         "playArea": "The play area shows two identical light clocks. The upper one is at rest in the laboratory; the lower one glides past at an adjustable fraction of the speed of light, its photon tracing a zigzag.",
-        "controlArea": "The control area has a relative velocity slider, a photon path checkbox, time controls, and a Reset All button that returns the simulation to its starting state.",
-        "interactionHint": "Change the relative velocity and watch the two tick counts drift apart."
+        "controlArea": "The control area has a relative velocity slider, a mirror separation slider, photon path and light-travel triangle checkboxes, time controls, and a Reset All button that returns the simulation to its starting state.",
+        "interactionHint": "Change the relative velocity and watch the two tick counts drift apart, then change the mirror separation and watch their ratio stay put."
       },
       "currentDetails": "At a relative velocity of {{beta}} times the speed of light, gamma is {{gamma}}. The lab clock has counted {{restTicks}} ticks and the moving clock {{movingTicks}}.",
       "controls": {
         "velocity": "Relative velocity",
         "velocityHelp": "Speed of the moving light clock, as a fraction of the speed of light.",
         "showTrail": "Photon path",
-        "showTrailHelp": "Show the zigzag the moving photon traces through the laboratory."
+        "showTrailHelp": "Show the zigzag the moving photon traces through the laboratory.",
+        "mirrorSeparation": "Mirror separation",
+        "mirrorSeparationHelp": "Distance between the mirrors of both clocks, in light-seconds. One tick takes twice this long.",
+        "showTriangle": "Light-travel triangle",
+        "showTriangleHelp": "Show the right triangle whose legs are how far the clock moved and how far the photon crossed, and whose hypotenuse is how far the photon flew."
       }
     },
     "spacetime": {
       "screenSummary": {
         "playArea": "The play area shows a spacetime diagram with space across and time up. Two draggable events, A and B, sit on it, along with the light cone through the origin and the axes of a second frame moving at an adjustable velocity.",
-        "controlArea": "The control area has a relative velocity slider, checkboxes for the light cone, the moving frame, lines of simultaneity and invariant hyperbolas, a button that boosts to event B's frame, and a Reset All button.",
+        "controlArea": "The control area has a relative velocity slider, checkboxes for the light cone, the moving frame, lines of simultaneity, invariant hyperbolas and coordinate projections, buttons that boost to event B's frame and to the frame where the events are simultaneous, and a Reset All button.",
         "interactionHint": "Drag an event outside the light cone, then sweep the velocity and watch which event comes first change."
       },
       "currentDetails": "Event A is at x {{ax}}, ct {{act}} light-seconds; event B is at x {{bx}}, ct {{bct}}. Their separation is {{separation}} with interval squared {{interval}}. At a relative velocity of {{beta}} times the speed of light, {{order}}.",
@@ -124,28 +143,35 @@
         "showSimultaneity": "Line of simultaneity",
         "showHyperbolas": "Invariant hyperbolas",
         "boostToB": "Boost to event B's frame",
-        "boostToBHelp": "Slide the relative velocity to the value that puts event B at rest, if one exists."
+        "boostToBHelp": "Slide the relative velocity to the value that puts event B at rest, if one exists.",
+        "boostToSimultaneity": "Boost to the frame where A and B are simultaneous",
+        "boostToSimultaneityHelp": "Slide the relative velocity to the value that makes the two events happen at the same time, if one exists.",
+        "showProjections": "Coordinate projections"
       }
     },
     "twinParadox": {
       "screenSummary": {
         "playArea": "The play area shows a spacetime diagram carrying two worldlines from the same start to the same finish: the stay-at-home twin's straight vertical line, and the travelling twin's out-and-back path through a draggable turn event.",
-        "controlArea": "The control area has a traveller's now checkbox, journey time controls, and a Reset All button that returns the simulation to its starting state.",
-        "interactionHint": "Drag the turn event, then play the journey and compare the two clocks."
+        "controlArea": "The control area has a journey scrubber measured in Earth seconds, traveller's now and light signals checkboxes, journey time controls, and a Reset All button that returns the simulation to its starting state.",
+        "interactionHint": "Drag the turn event, then play the journey and compare the two clocks — or turn on the light signals and count the flashes instead."
       },
       "currentDetails": "The turn is at x {{x}}, ct {{ct}} light-seconds, an outbound speed of {{beta}} times the speed of light with gamma {{gamma}}. At the reunion the Earth clock reads {{earth}} seconds and the traveller's clock {{traveller}}.",
       "controls": {
         "turnaround": "Turn event",
         "turnaroundHelp": "Drag to change how far and how fast the travelling twin goes.",
         "showSimultaneity": "Traveller's now",
-        "showSimultaneityHelp": "Show which moment on Earth the traveller currently calls now."
+        "showSimultaneityHelp": "Show which moment on Earth the traveller currently calls now.",
+        "journey": "Journey time",
+        "journeyHelp": "Scrub through the trip. Measured in seconds on the Earth clock, and stops at the reunion.",
+        "showSignals": "Light signals",
+        "showSignalsHelp": "Show the light pulses each twin sends the other once per second of their own time."
       }
     },
     "relativisticDoppler": {
       "screenSummary": {
-        "playArea": "The play area shows a light source sweeping past a stationary observer, emitting expanding wavefronts. The colour the observer receives shifts from blue to red as the source passes, and a lobe shows how the source's brightness is beamed forward.",
-        "controlArea": "The control area has a source velocity slider, an emitted wavelength slider, wavefront and beaming checkboxes, time controls, and a Reset All button.",
-        "interactionHint": "Set a high source velocity and watch the received colour swing through the spectrum as the source goes by."
+        "playArea": "The play area shows a light source sweeping past a draggable observer, emitting expanding wavefronts. The colour the observer receives shifts from blue to red as the source passes, and a lobe shows how the source's brightness is beamed forward.",
+        "controlArea": "The control area has a source velocity slider, an emitted wavelength slider, wavefront, beaming and light ray checkboxes, time controls, and a Reset All button.",
+        "interactionHint": "Set a high source velocity and watch the received colour swing through the spectrum as the source goes by, then drag the observer and watch the swing change shape."
       },
       "currentDetails": "The source moves at {{beta}} times the speed of light, emitting {{emitted}} nanometres. The observer receives {{observed}} nanometres, a Doppler factor of {{doppler}} and a relative brightness of {{brightness}}.",
       "controls": {
@@ -154,7 +180,11 @@
         "wavelength": "Emitted wavelength",
         "wavelengthHelp": "Wavelength the source emits in its own rest frame, in nanometres.",
         "showWavefronts": "Wavefronts",
-        "showBeaming": "Beaming lobe"
+        "showBeaming": "Beaming lobe",
+        "observer": "Observer",
+        "observerHelp": "Drag to change where the observer stands, and so the angle the light arrives at.",
+        "showLightRay": "Light ray and lagged source",
+        "showLightRayHelp": "Show where the source was when it emitted the light arriving now, and the path that light took."
       }
     }
   },

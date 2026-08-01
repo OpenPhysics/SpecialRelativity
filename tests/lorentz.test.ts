@@ -16,6 +16,7 @@ import { Vector2 } from "scenerystack/dot";
 import { describe, expect, it } from "vitest";
 import {
   aberrationCos,
+  axisProjections,
   betaOfRapidity,
   bolometricBeaming,
   boostEvent,
@@ -25,11 +26,14 @@ import {
   hyperbolaSamples,
   intervalSquared,
   MAX_BETA,
+  properSeparation,
   properTimeAlong,
   rapidityOf,
+  restFrameBeta,
   Separation,
   sanitizeBeta,
   separationOf,
+  simultaneityBeta,
   simultaneityLineThrough,
   velocityAddition,
   worldlineThrough,
@@ -341,6 +345,140 @@ describe("Doppler and beaming", () => {
         expect(Number.isFinite(dopplerFactor(beta, cosTheta))).toBe(true);
         expect(Number.isFinite(bolometricBeaming(beta, cosTheta))).toBe(true);
       }
+    }
+  });
+});
+
+describe("proper separation", () => {
+  it("is the proper time along a timelike separation", () => {
+    // The 3-4-5 case: s² = 9 − 16 = −7, and a clock carried between the two
+    // events reads √7 — the same number properTimeAlong() produces for the path.
+    const from = new Vector2(0, 0);
+    const to = new Vector2(3, 4);
+    expect(properSeparation(intervalSquared(to.minus(from)))).toBeCloseTo(Math.sqrt(7), 12);
+    expect(properSeparation(intervalSquared(to.minus(from)))).toBeCloseTo(properTimeAlong([from, to]), 12);
+  });
+
+  it("is the proper distance across a spacelike separation", () => {
+    // A spacelike pair measured in the frame that calls them simultaneous: boost
+    // to that frame and the remaining Δx must be the proper distance. This is an
+    // independent check — it goes through the boost rather than through √|s²|.
+    const from = new Vector2(0, 0);
+    const to = new Vector2(5, 1);
+    const beta = simultaneityBeta(from, to);
+    expect(beta).not.toBeNull();
+    const separated = boostEvent(to, beta as number).minus(boostEvent(from, beta as number));
+    expect(Math.abs(separated.y)).toBeCloseTo(0, 10);
+    expect(Math.abs(separated.x)).toBeCloseTo(properSeparation(intervalSquared(to.minus(from))), 10);
+  });
+
+  it("is invariant, because the interval it comes from is", () => {
+    const from = new Vector2(-2, 1);
+    const to = new Vector2(3, 2);
+    const rest = properSeparation(intervalSquared(to.minus(from)));
+    for (const beta of BETA_SWEEP) {
+      const boosted = boostEvent(to, beta).minus(boostEvent(from, beta));
+      expect(properSeparation(intervalSquared(boosted))).toBeCloseTo(rest, 10);
+    }
+  });
+});
+
+describe("the two special frames of a pair of events", () => {
+  it("finds the frame a timelike pair shares a place in, and no other", () => {
+    // The defining property, checked rather than restated: after the boost the
+    // two events must have the same x′.
+    const from = new Vector2(0, 0);
+    const to = new Vector2(3, 4);
+    const beta = restFrameBeta(from, to);
+    expect(beta).toBeCloseTo(0.75, 12);
+    const separated = boostEvent(to, beta as number).minus(boostEvent(from, beta as number));
+    expect(separated.x).toBeCloseTo(0, 10);
+
+    // A spacelike pair has no such frame, and neither does a simultaneous one.
+    expect(restFrameBeta(from, new Vector2(5, 1))).toBeNull();
+    expect(restFrameBeta(from, new Vector2(2, 0))).toBeNull();
+  });
+
+  it("finds the frame a spacelike pair is simultaneous in, and no other", () => {
+    const from = new Vector2(0, 0);
+    const to = new Vector2(4, 3);
+    const beta = simultaneityBeta(from, to);
+    expect(beta).toBeCloseTo(0.75, 12);
+    const separated = boostEvent(to, beta as number).minus(boostEvent(from, beta as number));
+    expect(separated.y).toBeCloseTo(0, 10);
+
+    expect(simultaneityBeta(from, new Vector2(3, 4))).toBeNull();
+    expect(simultaneityBeta(from, new Vector2(0, 2))).toBeNull();
+  });
+
+  it("offers exactly one of the two for every pair the sim can reach", () => {
+    // The complementarity the paired buttons on the Spacetime Diagram screen
+    // rest on: a timelike pair has a rest frame and no simultaneous frame, a
+    // spacelike pair the other way round. (Only pairs comfortably clear of the
+    // light cone are swept — right on it neither frame exists, which is the
+    // third case and the reason "exactly one" is stated for reachable pairs.)
+    const origin = new Vector2(0, 0);
+    for (const x of [-4, -1.5, 0, 1.5, 4]) {
+      for (const ct of [-4, -1.5, 1.5, 4]) {
+        const to = new Vector2(x, ct);
+        if (Math.abs(Math.abs(x) - Math.abs(ct)) < 0.5) {
+          continue;
+        }
+        const timelike = separationOf(origin, to) === Separation.TIMELIKE;
+        expect(restFrameBeta(origin, to) !== null).toBe(timelike);
+        expect(simultaneityBeta(origin, to) !== null).toBe(!timelike);
+      }
+    }
+  });
+});
+
+describe("coordinate projections onto the primed axes", () => {
+  it("lands on the points whose primed coordinates the event actually has", () => {
+    // The independent check: the foot on the x′ axis must be the inverse boost of
+    // ( x′, 0 ), and the foot on the ct′ axis the inverse boost of ( 0, ct′ ).
+    // Neither is how axisProjections computes them, so agreement is evidence
+    // rather than restatement.
+    for (const beta of BETA_SWEEP) {
+      for (const event of [new Vector2(3, 2), new Vector2(-2, 1), new Vector2(0, 0), new Vector2(4, -3)]) {
+        const primed = boostEvent(event, beta);
+        const { ontoSpaceAxis, ontoTimeAxis } = axisProjections(event, beta);
+        expect(ontoSpaceAxis.x).toBeCloseTo(boostEvent(new Vector2(primed.x, 0), -beta).x, 10);
+        expect(ontoSpaceAxis.y).toBeCloseTo(boostEvent(new Vector2(primed.x, 0), -beta).y, 10);
+        expect(ontoTimeAxis.x).toBeCloseTo(boostEvent(new Vector2(0, primed.y), -beta).x, 10);
+        expect(ontoTimeAxis.y).toBeCloseTo(boostEvent(new Vector2(0, primed.y), -beta).y, 10);
+      }
+    }
+  });
+
+  it("puts each foot on the axis it is named for", () => {
+    // The x′ axis is ct = βx and the ct′ axis is x = β·ct; a foot that is not on
+    // its axis is not a coordinate reading of anything.
+    for (const beta of BETA_SWEEP) {
+      const { ontoSpaceAxis, ontoTimeAxis } = axisProjections(new Vector2(3, 2), beta);
+      expect(ontoSpaceAxis.y).toBeCloseTo(beta * ontoSpaceAxis.x, 10);
+      expect(ontoTimeAxis.x).toBeCloseTo(beta * ontoTimeAxis.y, 10);
+    }
+  });
+
+  it("collapses to dropping perpendiculars at β = 0", () => {
+    const { ontoSpaceAxis, ontoTimeAxis } = axisProjections(new Vector2(3, 2), 0);
+    expect(ontoSpaceAxis.x).toBeCloseTo(3, 12);
+    expect(ontoSpaceAxis.y).toBeCloseTo(0, 12);
+    expect(ontoTimeAxis.x).toBeCloseTo(0, 12);
+    expect(ontoTimeAxis.y).toBeCloseTo(2, 12);
+  });
+
+  it("travels parallel to the other axis to get there", () => {
+    // The whole point: you reach the x′ axis along ct′ (direction β,1) and the
+    // ct′ axis along x′ (direction 1,β). Check the displacement's direction, not
+    // its length.
+    for (const beta of [-0.8, -0.3, 0.3, 0.8]) {
+      const event = new Vector2(3, 2);
+      const { ontoSpaceAxis, ontoTimeAxis } = axisProjections(event, beta);
+      const towardSpaceAxis = ontoSpaceAxis.minus(event);
+      const towardTimeAxis = ontoTimeAxis.minus(event);
+      expect(towardSpaceAxis.x).toBeCloseTo(beta * towardSpaceAxis.y, 10);
+      expect(towardTimeAxis.y).toBeCloseTo(beta * towardTimeAxis.x, 10);
     }
   });
 });

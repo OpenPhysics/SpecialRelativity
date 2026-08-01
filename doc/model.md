@@ -75,9 +75,19 @@ how far the clock itself moved in that time:
 so the lab sees one tick take 2γL. The photon travels at c in **both** frames — that is the
 postulate, not a result — and the stretched tick is what the postulate forces.
 
-Defaults: L = 1 light-second, so one tick is 2 s at rest. The moving clock runs along a finite rail
-and wraps around at the end; that is a display convention, not physics. The clock is inertial
-throughout and never turns around.
+That triangle can be drawn on the screen rather than only described. Over the lab time Δt since the
+last mirror strike the clock has slid βΔt along the rail and the photon has climbed Δt/γ across it,
+while the photon itself has covered Δt; those three lengths are the two legs and the hypotenuse, and
+`(Δt)² = (βΔt)² + (Δt/γ)²` is the derivation with nothing left over.
+
+**The mirror separation L is adjustable** (0.5 – 1.6 ls, default 1). Both tick periods change with
+it — 2L on the clock's own worldline, 2γL in the lab — but their *ratio* is γ whatever L is set to.
+That is worth being able to test rather than take on faith: it is the check that the effect is time
+dilation and not some artefact of the apparatus. At the default, one tick is 2 s at rest, an easy
+number to hold onto while γ stretches it.
+
+The moving clock runs along a finite rail and wraps around at the end; that is a display convention,
+not physics. The clock is inertial throughout and never turns around.
 
 ### Spacetime Diagram
 
@@ -108,8 +118,31 @@ Two quantities are computed side by side and behave very differently:
   spacelike, and therefore only when neither event could have caused the other.
 
 For a spacelike pair the order flips exactly as β passes `Δct/Δx`. For a timelike pair no allowed β
-can flip it. The "boost to B's frame" button is disabled precisely when B is *not* timelike-separated
-from the origin, which is the same statement in a different form.
+can flip it.
+
+Two buttons make that concrete, and they are a matched pair — for any placement of A and B, exactly
+one of them is available:
+
+| Button | β it goes to | Available when |
+|---|---|---|
+| **Boost to B's frame** — B at rest at the origin | `Δx/Δct` | B is timelike-separated from the origin |
+| **Make simultaneous** — A and B at the same time | `Δct/Δx` | A and B are spacelike separated |
+
+The greyed-out half is as much of the lesson as the live one: no change of frame reaches a
+spacelike-separated event, because doing so would mean outrunning light, and none reorders a
+timelike pair, because that would put an effect before its cause.
+
+Alongside `s²` the screen reports **√|s²|**, which is the same invariant in units that mean
+something: the *proper time* a clock carried between the events would read when they are timelike
+separated, and the *proper distance* between them, measured in the frame that calls them
+simultaneous, when they are spacelike.
+
+**Coordinate projections.** Reading a coordinate off a skewed mesh is the step students reliably get
+wrong, because the rectangular habit — drop a perpendicular — is exactly the wrong move. You travel
+parallel to the *other* axis: parallel to ct′ to reach the x′ axis, parallel to x′ to reach the ct′
+axis, because "same x′" is a line parallel to ct′ and not a line at right angles to anything. Both
+frames' projections can be drawn at once from the selected event, and at β = 0 the primed pair
+collapses onto the lab pair, so the familiar recipe appears as the special case it is.
 
 ### Twin Paradox
 
@@ -141,13 +174,39 @@ That identity is checked directly in `tests/twinJourney.test.ts`, and it is the 
 "the traveller never sees those years pass" is true without any of them going missing.
 
 The turn is constrained to stay inside the light cone (`ct ≥ 1.04·|x|`), because a trip outside it
-would require outrunning light.
+would require outrunning light. The journey plays back in **Earth seconds** — the scrubber, the ct
+axis and the Earth readout are all the same number — and stops at the reunion.
+
+#### Counting flashes instead of trusting coordinates
+
+The argument above is made entirely in coordinates, and a student's fair objection is that
+coordinates are exactly the thing they have just been told not to trust. So each twin can also send
+the other a light pulse once per second of their **own** time, and each can count what arrives.
+
+- Earth's pulses go out one per second of lab time. An outbound pulse chases a receding target and
+  takes `t_e/(1−β)` to land; after the turn it meets the traveller head-on instead. The gaps between
+  arrivals are therefore longer than a second on the way out and shorter on the way back — the
+  Doppler shift of the trip, with no Doppler formula anywhere in sight.
+- The traveller's pulses leave at proper times `k·τ`, which is lab time `k·γτ`. That stretch *is*
+  their time dilation, expressed as something the Earth twin can count.
+
+By the reunion the traveller has seen **every** pulse Earth sent, all `⌊2·ct_turn / τ⌋` of them,
+while Earth has seen only the traveller's fewer `⌊τ_traveller / τ⌋`. Neither twin has to be told
+whose clock ran slow; they counted. Both totals are checked in the tests.
 
 ### Relativistic Doppler
 
 A light source flies past a stationary observer who sits off to one side of its line of travel. The
 offset is deliberate: with the observer directly on the track, the angle could only ever be 0 or π
 and the transverse case — the interesting one — could never occur.
+
+**The observer can be moved**, and where they stand is half the experiment. Sliding them along the
+track moves the transverse moment with them: it happens when the *emission* was straight across from
+where they are standing, not when the source passes some fixed marker. Standing further off the track
+stretches the whole approach-to-recede swing out and gentles it, because the angle changes more
+slowly; standing close makes it violent. The physics is identical in every case — only the sampling
+of it changes — and the transverse shift is exactly 1/γ wherever they stand, because that factor is
+time dilation and has nothing to do with geometry.
 
 The light arriving now left the source some time ago, from wherever the source was **then**. Every
 observed quantity is computed from that retarded emission event, found by solving
@@ -157,7 +216,9 @@ observed quantity is computed from that retarded emission event, found by solvin
 ```
 
 for `t_e`. This is not a refinement: using the source's current position instead would put the
-transverse moment in the wrong place and would not reproduce the transverse redshift at all.
+transverse moment in the wrong place and would not reproduce the transverse redshift at all. The
+retarded position can be shown on screen, marked where the source *was* and joined to where it is
+now — the gap between the two is the whole of "you never see a moving thing where it is".
 
 With θ the angle, in the observer's frame, between the source's velocity and the received ray:
 
@@ -196,9 +257,12 @@ draws.
 |---|---|---|---|
 | β | −0.99 … 0.99 | 0.6 | γ = 1.25 at the default — visibly relativistic while the primed axes stay clearly off the light cone. At the cap γ ≈ 7.09; pushing closer to 1 collapses the axes onto the cone, and the geometry becomes unreadable long before the arithmetic becomes inaccurate. |
 | Diagram extent | ±5 ls | — | Light rays run corner to corner |
-| Mirror separation L | fixed | 1 ls | One tick = 2 s, an easy number to hold onto while γ stretches it |
+| Mirror separation L | 0.5 … 1.6 ls | 1 ls | At the default one tick = 2 s, an easy number to hold onto while γ stretches it. The range is kept modest so the taller clock still fits between the readouts and the rail |
 | Turn position | \|x\| ≤ 4.2 ls, 0.6 ≤ ct ≤ 4.4 ls | (3, 4) | The 3-4-5 case: γ = 1.512, Earth 8 s against the traveller's 2√7 ≈ 5.29 s |
+| Journey time | 0 … 8.8 s | 0 | The latest reunion any allowed turn can produce; the reachable end moves with the trip |
+| Signal interval | fixed | 1 s of the sender's own time | A handful of pulses per leg on the default trip — enough to see the spacing stretch and crowd, few enough that the diagram does not turn into hatching |
 | Emitted λ | 380 … 700 nm | 550 nm | The visible band; green sits mid-spectrum, so shifts show in both directions |
+| Observer position | \|x\| ≤ 6 ls, 1.5 ≤ d ≤ 6.5 ls | (0, −2.6) | The near limit keeps the observer clear of the track: a ray grazing the source's own path makes the retarded construction degenerate just as it becomes most interesting to look at |
 
 ## Simplifications and assumptions
 
