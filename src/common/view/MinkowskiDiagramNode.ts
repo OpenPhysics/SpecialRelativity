@@ -37,7 +37,7 @@ import {
 } from "scenerystack/bamboo";
 import { Bounds2, Range, Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
-import { Orientation } from "scenerystack/phet-core";
+import { combineOptions, Orientation } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Node, type NodeOptions, Path, RichText, Text } from "scenerystack/scenery";
 import SpecialRelativityColors from "../../SpecialRelativityColors.js";
@@ -45,7 +45,7 @@ import { DIAGRAM, FONTS } from "../../SpecialRelativityConstants.js";
 import { boostEvent, simultaneityLineThrough, worldlineThrough } from "../model/lorentz.js";
 import { decimalPlacesForStep, formatTickValue, niceStep } from "./chartUtils.js";
 
-export type MinkowskiDiagramNodeOptions = {
+type MinkowskiDiagramNodeSelfOptions = {
   /** Velocity of the primed frame, as a fraction of c. Drives the shear. */
   betaProperty: TReadOnlyProperty<number>;
   /** Horizontal axis label, e.g. "x (light-seconds)". */
@@ -78,6 +78,8 @@ export type MinkowskiDiagramNodeOptions = {
   nodeOptions?: NodeOptions;
 };
 
+export type MinkowskiDiagramNodeOptions = MinkowskiDiagramNodeSelfOptions;
+
 export class MinkowskiDiagramNode extends Node {
   /** Maps lab-frame (x, ct) in light-seconds to pixels inside the plotting area. */
   public readonly chartTransform: ChartTransform;
@@ -108,9 +110,17 @@ export class MinkowskiDiagramNode extends Node {
   private readonly ctRange: Range;
 
   public constructor(providedOptions: MinkowskiDiagramNodeOptions) {
-    const xRange = providedOptions.xRange ?? new Range(-DIAGRAM.HALF_EXTENT, DIAGRAM.HALF_EXTENT);
-    const ctRange = providedOptions.ctRange ?? new Range(-DIAGRAM.HALF_EXTENT, DIAGRAM.HALF_EXTENT);
-    const viewWidth = providedOptions.viewWidth ?? DIAGRAM.VIEW_WIDTH;
+    const options = combineOptions<MinkowskiDiagramNodeOptions>(
+      {
+        xRange: new Range(-DIAGRAM.HALF_EXTENT, DIAGRAM.HALF_EXTENT),
+        ctRange: new Range(-DIAGRAM.HALF_EXTENT, DIAGRAM.HALF_EXTENT),
+        viewWidth: DIAGRAM.VIEW_WIDTH,
+      },
+      providedOptions,
+    );
+    const xRange = options.xRange ?? new Range(-DIAGRAM.HALF_EXTENT, DIAGRAM.HALF_EXTENT);
+    const ctRange = options.ctRange ?? new Range(-DIAGRAM.HALF_EXTENT, DIAGRAM.HALF_EXTENT);
+    const viewWidth = options.viewWidth ?? DIAGRAM.VIEW_WIDTH;
 
     // Equal pixels per light-second on both axes — see the header note.
     const viewHeight = (viewWidth * ctRange.getLength()) / xRange.getLength();
@@ -210,8 +220,8 @@ export class MinkowskiDiagramNode extends Node {
     const coneShading = new Path(this.causalRegionShape(coneReach), {
       fill: SpecialRelativityColors.lightConeFillColorProperty,
     });
-    if (providedOptions.shadeLightConeProperty) {
-      coneShading.visibleProperty = providedOptions.shadeLightConeProperty;
+    if (options.shadeLightConeProperty) {
+      coneShading.visibleProperty = options.shadeLightConeProperty;
     } else {
       coneShading.visible = false;
     }
@@ -228,8 +238,8 @@ export class MinkowskiDiagramNode extends Node {
         }),
       ],
     });
-    if (providedOptions.showLightConeProperty) {
-      lightCone.visibleProperty = providedOptions.showLightConeProperty;
+    if (options.showLightConeProperty) {
+      lightCone.visibleProperty = options.showLightConeProperty;
     }
 
     // ── Primed frame: axes and gridlines ─────────────────────────────────────
@@ -265,26 +275,26 @@ export class MinkowskiDiagramNode extends Node {
     }
 
     const primedGrid = new Node({ children: primedGridLines.map((line) => line.plot) });
-    if (providedOptions.showPrimedGridProperty) {
-      primedGrid.visibleProperty = providedOptions.showPrimedGridProperty;
+    if (options.showPrimedGridProperty) {
+      primedGrid.visibleProperty = options.showPrimedGridProperty;
     } else {
       primedGrid.visible = false;
     }
 
-    const primedCtAxisLabel = new RichText(providedOptions.primedCtAxisLabelProperty, {
+    const primedCtAxisLabel = new RichText(options.primedCtAxisLabelProperty, {
       font: FONTS.AXIS_LABEL,
       fill: SpecialRelativityColors.primedAxisColorProperty,
     });
-    const primedXAxisLabel = new RichText(providedOptions.primedXAxisLabelProperty, {
+    const primedXAxisLabel = new RichText(options.primedXAxisLabelProperty, {
       font: FONTS.AXIS_LABEL,
       fill: SpecialRelativityColors.primedAxisColorProperty,
     });
 
     const primedFrame = new Node({ children: [primedGrid, primedCtAxis, primedXAxis] });
     const primedLabels = new Node({ children: [primedCtAxisLabel, primedXAxisLabel] });
-    if (providedOptions.showPrimedFrameProperty) {
-      primedFrame.visibleProperty = providedOptions.showPrimedFrameProperty;
-      primedLabels.visibleProperty = providedOptions.showPrimedFrameProperty;
+    if (options.showPrimedFrameProperty) {
+      primedFrame.visibleProperty = options.showPrimedFrameProperty;
+      primedLabels.visibleProperty = options.showPrimedFrameProperty;
     }
 
     this.plotLayer = new Node();
@@ -312,7 +322,7 @@ export class MinkowskiDiagramNode extends Node {
     });
     this.addChild(chartGroup);
 
-    const xAxisLabel = new RichText(providedOptions.xAxisLabelProperty, {
+    const xAxisLabel = new RichText(options.xAxisLabelProperty, {
       font: FONTS.DIAGRAM_TITLE,
       fill: SpecialRelativityColors.secondaryTextColorProperty,
       maxWidth: viewWidth,
@@ -321,7 +331,7 @@ export class MinkowskiDiagramNode extends Node {
     });
     this.addChild(xAxisLabel);
 
-    const ctAxisLabel = new RichText(providedOptions.ctAxisLabelProperty, {
+    const ctAxisLabel = new RichText(options.ctAxisLabelProperty, {
       font: FONTS.DIAGRAM_TITLE,
       fill: SpecialRelativityColors.secondaryTextColorProperty,
       maxWidth: viewHeight,
@@ -365,13 +375,13 @@ export class MinkowskiDiagramNode extends Node {
       primedXAxisLabel.bottom = xAxisEnd.y - 6;
     };
 
-    const primedFrameMultilink = Multilink.multilink([providedOptions.betaProperty], updatePrimedFrame);
+    const primedFrameMultilink = Multilink.multilink([options.betaProperty], updatePrimedFrame);
 
     this.disposeEmitter.addListener(() => {
       primedFrameMultilink.dispose();
     });
 
-    this.mutate(providedOptions.nodeOptions);
+    this.mutate(options.nodeOptions);
   }
 
   /** Model→view for lab-frame events; screens use it to place their own nodes. */

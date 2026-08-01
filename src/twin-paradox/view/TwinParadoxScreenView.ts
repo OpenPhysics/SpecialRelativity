@@ -15,10 +15,10 @@
 import { DerivedProperty, Multilink, PatternStringProperty } from "scenerystack/axon";
 import { LinePlot } from "scenerystack/bamboo";
 import { Range, Vector2 } from "scenerystack/dot";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { Circle, HSeparator, Node, Text, VBox } from "scenerystack/scenery";
 import { ResetAllButton, TimeControlNode } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { simultaneityLineThrough } from "../../common/model/lorentz.js";
 import {
   FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
@@ -51,16 +51,21 @@ const DIAGRAM_TOP = 44;
 /** Time runs from the departure to a little past the latest possible reunion. */
 const CT_RANGE = new Range(0, 9);
 
+export type TwinParadoxScreenViewOptions = ScreenViewOptions;
+
 export class TwinParadoxScreenView extends ScreenView {
   public constructor(
     model: TwinParadoxModel,
     preferences: SpecialRelativityPreferencesModel,
-    options?: ScreenViewOptions,
+    providedOptions?: TwinParadoxScreenViewOptions,
   ) {
-    super({
-      screenSummaryContent: new TwinParadoxScreenSummaryContent(model),
-      ...options,
-    });
+    const options = optionize<TwinParadoxScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {
+        screenSummaryContent: new TwinParadoxScreenSummaryContent(model),
+      },
+      providedOptions,
+    );
+    super(options);
 
     const strings = StringManager.getInstance();
     const twinStrings = strings.getTwinParadoxStrings();

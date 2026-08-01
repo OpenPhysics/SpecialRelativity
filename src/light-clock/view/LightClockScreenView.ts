@@ -15,10 +15,10 @@
 import { DerivedProperty, PatternStringProperty } from "scenerystack/axon";
 import { Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { HSeparator, Line, Node, Path, Text, VBox } from "scenerystack/scenery";
 import { ResetAllButton, TimeControlNode } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { BETA_RANGE } from "../../common/model/SpecialRelativityModel.js";
 import {
   FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
@@ -43,16 +43,21 @@ const CLOCK_COLUMN_X = 300;
 const REST_CLOCK_BASELINE_Y = 250;
 const MOVING_CLOCK_BASELINE_Y = 470;
 
+export type LightClockScreenViewOptions = ScreenViewOptions;
+
 export class LightClockScreenView extends ScreenView {
   public constructor(
     model: LightClockModel,
     preferences: SpecialRelativityPreferencesModel,
-    options?: ScreenViewOptions,
+    providedOptions?: LightClockScreenViewOptions,
   ) {
-    super({
-      screenSummaryContent: new LightClockScreenSummaryContent(model),
-      ...options,
-    });
+    const options = optionize<LightClockScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {
+        screenSummaryContent: new LightClockScreenSummaryContent(model),
+      },
+      providedOptions,
+    );
+    super(options);
 
     const strings = StringManager.getInstance();
     const clockStrings = strings.getLightClockStrings();

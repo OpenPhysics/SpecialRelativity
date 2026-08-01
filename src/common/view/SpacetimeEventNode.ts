@@ -11,6 +11,7 @@
  * clip.
  */
 
+import { combineOptions } from "scenerystack/phet-core";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import type { SpacetimeEvent } from "../model/SpacetimeEvent.js";
 import { DraggableMarkerNode, type DraggableMarkerNodeOptions } from "./DraggableMarkerNode.js";
@@ -24,9 +25,12 @@ export class SpacetimeEventNode extends DraggableMarkerNode {
     modelViewTransform: ModelViewTransform2,
     providedOptions: SpacetimeEventNodeOptions,
   ) {
-    super(event.positionProperty, modelViewTransform, {
-      ...providedOptions,
-      dragBoundsProperty: event.dragBoundsProperty,
-    });
+    super(
+      event.positionProperty,
+      modelViewTransform,
+      combineOptions<DraggableMarkerNodeOptions>(providedOptions, {
+        dragBoundsProperty: event.dragBoundsProperty,
+      }),
+    );
   }
 }

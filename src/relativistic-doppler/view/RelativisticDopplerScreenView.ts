@@ -16,11 +16,11 @@
 import { DerivedProperty, Multilink, PatternStringProperty } from "scenerystack/axon";
 import { Bounds2, Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Circle, Line, Node, Path, Rectangle, Text, VBox } from "scenerystack/scenery";
 import { ResetAllButton, TimeControlNode, VisibleColor } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { BETA_RANGE } from "../../common/model/SpecialRelativityModel.js";
 import {
   FLAT_PLAY_PAUSE_STEP_BUTTON_OPTIONS,
@@ -59,16 +59,21 @@ const STAGE_BOUNDS = new Bounds2(0, 34, 660, 536);
 /** Half-width of the band of cos θ that counts as "transverse" for the status line. */
 const TRANSVERSE_BAND = 0.08;
 
+export type RelativisticDopplerScreenViewOptions = ScreenViewOptions;
+
 export class RelativisticDopplerScreenView extends ScreenView {
   public constructor(
     model: RelativisticDopplerModel,
     _preferences: SpecialRelativityPreferencesModel,
-    options?: ScreenViewOptions,
+    providedOptions?: RelativisticDopplerScreenViewOptions,
   ) {
-    super({
-      screenSummaryContent: new RelativisticDopplerScreenSummaryContent(model),
-      ...options,
-    });
+    const options = optionize<RelativisticDopplerScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {
+        screenSummaryContent: new RelativisticDopplerScreenSummaryContent(model),
+      },
+      providedOptions,
+    );
+    super(options);
 
     const strings = StringManager.getInstance();
     const dopplerStrings = strings.getRelativisticDopplerStrings();

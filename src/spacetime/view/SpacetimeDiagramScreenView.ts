@@ -15,10 +15,10 @@ import { DerivedProperty, Multilink, PatternStringProperty, type TReadOnlyProper
 import { LinePlot } from "scenerystack/bamboo";
 import { toFixed, Vector2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
+import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { Circle, GridBox, HBox, HSeparator, Node, Path, Text, VBox } from "scenerystack/scenery";
 import { ResetAllButton } from "scenerystack/scenery-phet";
-import type { ScreenViewOptions } from "scenerystack/sim";
-import { ScreenView } from "scenerystack/sim";
+import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { Animation, Easing } from "scenerystack/twixt";
 import {
   axisProjections,
@@ -63,16 +63,21 @@ const DIAGRAM_TOP = 48;
  */
 const PANEL_WIDTH = 300;
 
+export type SpacetimeDiagramScreenViewOptions = ScreenViewOptions;
+
 export class SpacetimeDiagramScreenView extends ScreenView {
   public constructor(
     model: SpacetimeDiagramModel,
     preferences: SpecialRelativityPreferencesModel,
-    options?: ScreenViewOptions,
+    providedOptions?: SpacetimeDiagramScreenViewOptions,
   ) {
-    super({
-      screenSummaryContent: new SpacetimeDiagramScreenSummaryContent(model),
-      ...options,
-    });
+    const options = optionize<SpacetimeDiagramScreenViewOptions, EmptySelfOptions, ScreenViewOptions>()(
+      {
+        screenSummaryContent: new SpacetimeDiagramScreenSummaryContent(model),
+      },
+      providedOptions,
+    );
+    super(options);
 
     const strings = StringManager.getInstance();
     const diagramStrings = strings.getSpacetimeDiagramStrings();
