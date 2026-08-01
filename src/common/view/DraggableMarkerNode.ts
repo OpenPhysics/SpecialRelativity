@@ -14,15 +14,7 @@
 import type { TReadOnlyProperty } from "scenerystack/axon";
 import type { Bounds2, Vector2, Vector2Property } from "scenerystack/dot";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
-import {
-  Circle,
-  DragListener,
-  InteractiveHighlighting,
-  KeyboardDragListener,
-  Node,
-  Text,
-  type TPaint,
-} from "scenerystack/scenery";
+import { Circle, InteractiveHighlighting, Node, RichDragListener, Text, type TPaint } from "scenerystack/scenery";
 import SpecialRelativityColors from "../../SpecialRelativityColors.js";
 import { EVENT, FONTS } from "../../SpecialRelativityConstants.js";
 
@@ -86,37 +78,29 @@ export class DraggableMarkerNode extends InteractiveHighlighting(Node) {
     };
     positionProperty.link(updateTranslation);
 
-    // Both listeners get the same position property, transform, bounds and
-    // constraint, so mouse and keyboard cannot drift apart.
-    const dragListener = new DragListener({
+    // One RichDragListener owns pointer + keyboard on the same positionProperty /
+    // transform / bounds / constraint, so the two input methods cannot drift apart.
+    const dragListener = new RichDragListener({
       positionProperty: positionProperty,
       transform: modelViewTransform,
       dragBoundsProperty: providedOptions.dragBoundsProperty,
       ...(providedOptions.mapPosition ? { mapPosition: providedOptions.mapPosition } : {}),
       start: () => providedOptions.onPress?.(),
+      dragListenerOptions: {},
+      keyboardDragListenerOptions: {
+        dragSpeed: EVENT.DRAG_SPEED,
+        shiftDragSpeed: EVENT.SHIFT_DRAG_SPEED,
+      },
     });
     this.addInputListener(dragListener);
-
-    const keyboardDragListener = new KeyboardDragListener({
-      positionProperty: positionProperty,
-      transform: modelViewTransform,
-      dragBoundsProperty: providedOptions.dragBoundsProperty,
-      dragSpeed: EVENT.DRAG_SPEED,
-      shiftDragSpeed: EVENT.SHIFT_DRAG_SPEED,
-      ...(providedOptions.mapPosition ? { mapPosition: providedOptions.mapPosition } : {}),
-      start: () => providedOptions.onPress?.(),
-    });
-    this.addInputListener(keyboardDragListener);
 
     this.disposeEmitter.addListener(() => {
       positionProperty.unlink(updateTranslation);
       // Remove before disposing so hotkeyManager drops its reference to this node
-      // (the KeyboardDragListener's hotkeys otherwise keep the disposed node
+      // (RichDragListener's keyboard hotkeys otherwise keep the disposed node
       // reachable, which the memory-leak test catches).
       this.removeInputListener(dragListener);
-      this.removeInputListener(keyboardDragListener);
       dragListener.dispose();
-      keyboardDragListener.dispose();
       label.dispose();
     });
   }
