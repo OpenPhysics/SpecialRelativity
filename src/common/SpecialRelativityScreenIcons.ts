@@ -104,6 +104,52 @@ export function createSpacetimeDiagramIcon(): ScreenIcon {
   );
 }
 
+/**
+ * A barn with a door at each end and a ladder inside it, drawn against the ghost
+ * of the same ladder at its uncontracted length — the whole screen in one picture:
+ * the ladder that fits is the same ladder as the one that does not.
+ */
+export function createLengthContractionIcon(): ScreenIcon {
+  const baseline = 268;
+  const barnTop = 118;
+  const barnLeft = 158;
+  const barnRight = 390;
+  const ladderY = (baseline + barnTop) / 2;
+  return iconFrom(
+    new Node({
+      children: [
+        background(),
+        // The ladder at rest — longer than the barn, and shown only as an outline
+        // because it is the length nobody in this picture measures.
+        new Rectangle(120, ladderY - 17, 340, 34, {
+          stroke: SpecialRelativityColors.secondaryTextColorProperty,
+          lineWidth: 4,
+          lineDash: [14, 10],
+        }),
+        new Path(
+          polyline([
+            [barnLeft, baseline],
+            [barnLeft, barnTop],
+            [barnRight, barnTop],
+            [barnRight, baseline],
+          ]),
+          { stroke: SpecialRelativityColors.apparatusColorProperty, lineWidth: 11 },
+        ),
+        new Rectangle(barnLeft + 22, ladderY - 15, barnRight - barnLeft - 44, 30, {
+          fill: SpecialRelativityColors.ladderColorProperty,
+        }),
+        // Both doors shut at once: the barn frame's version of the story.
+        new Rectangle(barnLeft - 9, barnTop, 18, baseline - barnTop, {
+          fill: SpecialRelativityColors.eventBColorProperty,
+        }),
+        new Rectangle(barnRight - 9, barnTop, 18, baseline - barnTop, {
+          fill: SpecialRelativityColors.eventBColorProperty,
+        }),
+      ],
+    }),
+  );
+}
+
 /** One straight worldline and one with a corner, from the same start to the same end. */
 export function createTwinParadoxIcon(): ScreenIcon {
   const startY = 320;

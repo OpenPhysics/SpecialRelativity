@@ -138,6 +138,64 @@ export const LIGHT_CLOCK = {
   TRACK_HALF_LENGTH: 2.1,
 } as const;
 
+// ── Length Contraction screen ─────────────────────────────────────────────────
+
+export const LADDER_BARN = {
+  /**
+   * Proper length of the barn, in light-seconds. Fixed rather than adjustable:
+   * only the *ratio* of the two lengths matters, so a second length slider would
+   * offer a second way to reach states the ladder slider already reaches, and the
+   * barn is the better one to hold still because it is the frame the diagram is
+   * drawn in.
+   */
+  BARN_LENGTH: 4,
+
+  /**
+   * Proper length of the ladder, in light-seconds. The default pairs with
+   * {@link LADDER_BARN.DEFAULT_BETA} to put the paradox on screen in round
+   * numbers: at β = 0.8, γ = 5/3, so the 5 ls ladder is measured at exactly 3 ls
+   * in the barn frame and the 4 ls barn at exactly 2.4 ls in the ladder frame.
+   */
+  LADDER_LENGTH: 5,
+  MIN_LADDER_LENGTH: 2,
+  MAX_LADDER_LENGTH: 8,
+  LADDER_LENGTH_DELTA: 0.5,
+
+  /**
+   * Speed of the ladder through the barn. Kept strictly positive — at β = 0 the
+   * ladder never reaches the barn and the pass window is infinite — and capped a
+   * little below the sim-wide 0.99, because in the ladder's frame the two door
+   * slams are γβB apart: at 0.99 that window is four times longer than the fly-past
+   * it brackets, and the animation becomes mostly waiting.
+   */
+  DEFAULT_BETA: 0.8,
+  MIN_BETA: 0.1,
+  MAX_BETA: 0.95,
+
+  /**
+   * How long a door is *drawn* shut either side of its slam, in seconds of the
+   * frame being watched. A slam is an instant and has no duration; this is a
+   * display convention, and the only one on the screen. Without it the moment the
+   * whole experiment turns on would occupy a single frame of animation and nobody
+   * would ever see it.
+   */
+  DOOR_FLASH_HALF_WIDTH: 0.35,
+
+  /** Pixels per light-second in the stage above the diagram. */
+  STAGE_VIEW_SCALE: 46,
+
+  /** Half-width of the stage's window on space, in light-seconds. */
+  STAGE_HALF_EXTENT: 7,
+
+  /** Barn wall/door thickness and height in the stage, in pixels. */
+  DOOR_WIDTH: 7,
+  BARN_HEIGHT: 74,
+
+  /** Ladder bar thickness in the stage, in pixels, and how many rungs it carries. */
+  LADDER_HEIGHT: 16,
+  LADDER_RUNGS: 7,
+} as const;
+
 // ── Twin Paradox screen ───────────────────────────────────────────────────────
 
 export const TWIN = {
@@ -232,6 +290,7 @@ SpecialRelativityNamespace.register("SpecialRelativityConstants", {
   LIGHTLIKE_TOLERANCE,
   EVENT,
   LIGHT_CLOCK,
+  LADDER_BARN,
   TWIN,
   MAX_REUNION_TIME,
   DOPPLER,

@@ -1,7 +1,8 @@
 # Special Relativity
 
 An interactive simulation of flat-spacetime relativity — a moving light clock, a live Minkowski
-diagram, the twin paradox, and the relativistic Doppler effect — built with
+diagram, the ladder-and-barn paradox, the twin paradox, and the relativistic Doppler effect — built
+with
 [SceneryStack](https://scenerystack.org/), Vite 8, TypeScript 6, and Biome 2.
 
 ## Features
@@ -11,6 +12,10 @@ diagram, the twin paradox, and the relativistic Doppler effect — built with
 - **Spacetime Diagram** — drag two events on a Minkowski diagram while a velocity slider shears the
   primed axes live; light cone, lines of simultaneity, invariant hyperbolas, and a readout that
   contrasts the invariant interval with the frame-dependent order of events
+- **Length Contraction** — a ladder flying through a barn whose two doors slam together, watched
+  from the barn's frame and then from the ladder's; the same two slams, one pair of events, and two
+  frames that answer "did it fit?" differently because they slice spacetime into "nows" at
+  different angles
 - **Twin Paradox** — place the turnaround event and watch both worldlines, both clocks, and the
   jump in the traveller's "now" that resolves the paradox
 - **Relativistic Doppler** — a source flying past an observer, with wavefronts, the received colour
@@ -19,7 +24,7 @@ diagram, the twin paradox, and the relativistic Doppler effect — built with
 - English, Spanish, and French localization via `StringManager`
 - Full keyboard access, screen-reader summaries, and default/projector colour profiles
 - Progressive Web App (installable, offline-capable)
-- 100 unit tests over the pure physics modules, plus a memory-leak suite
+- 151 unit tests over the pure physics modules, plus a memory-leak suite
 
 ## Quick Start
 

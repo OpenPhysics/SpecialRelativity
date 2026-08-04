@@ -3,6 +3,7 @@
   "screens": {
     "lightClock": "Reloj de luz",
     "spacetime": "Diagrama de espacio-tiempo",
+    "lengthContraction": "Contracción de longitudes",
     "twinParadox": "Paradoja de los gemelos",
     "relativisticDoppler": "Doppler relativista"
   },
@@ -67,6 +68,30 @@
     "showProjections": "Proyecciones de coordenadas",
     "properTime": "Tiempo propio",
     "properDistance": "Distancia propia"
+  },
+  "lengthContraction": {
+    "barnFrame": "Sistema del granero",
+    "ladderFrame": "Sistema de la escalera",
+    "ladderSpeed": "Velocidad de la escalera",
+    "ladderProperLength": "Escalera, en reposo",
+    "ladderLength": "La escalera mide",
+    "barnLength": "El granero mide",
+    "fitsQuestion": "¿Cabe entre las puertas?",
+    "fits": "Sí",
+    "doesNotFit": "No",
+    "sceneTime": "Reloj de este sistema",
+    "slamGap": "Entre los cierres",
+    "slamsTogether": "Las dos puertas se cierran en el mismo instante.",
+    "exitSlamsFirst": "La puerta de salida se cierra primero.",
+    "entranceSlamsFirst": "La puerta de entrada se cierra primero.",
+    "goToEntranceSlam": "Cierre de entrada",
+    "goToExitSlam": "Cierre de salida",
+    "showWorldSheets": "Hojas de universo",
+    "showSlice": "El «ahora» de este sistema",
+    "barnMeasure": "Granero {{value}} sl",
+    "ladderMeasure": "Escalera {{value}} sl",
+    "verdict": "Los dos cierres tienen separación de tipo espacio: ninguna de las dos respuestas es la equivocada.",
+    "takeaway": "Una escalera, un granero, dos sistemas — y lo único en lo que discrepan es en qué sucesos ocurren a la vez."
   },
   "twinParadox": {
     "turnaround": "Giro",
@@ -147,6 +172,32 @@
         "boostToSimultaneity": "Cambiar al sistema donde A y B son simultáneos",
         "boostToSimultaneityHelp": "Ajusta la velocidad relativa al valor que hace que ambos sucesos ocurran a la vez, si existe.",
         "showProjections": "Proyecciones de coordenadas"
+      }
+    },
+    "lengthContraction": {
+      "screenSummary": {
+        "playArea": "El área de juego muestra un granero con una puerta en cada extremo y una escalera que lo atraviesa, dibujada con las reglas y el reloj del sistema seleccionado. Debajo, un diagrama de espacio-tiempo, siempre en coordenadas del granero, lleva la banda que barre cada objeto y los dos cierres de puertas.",
+        "controlArea": "El área de control tiene un selector de sistema, un deslizador de velocidad de la escalera, un deslizador de longitud de la escalera, botones que llevan el reloj a cada cierre de puerta, casillas para las hojas de universo y la rebanada del «ahora», controles de tiempo y un botón Reiniciar todo.",
+        "interactionHint": "Observa cómo la escalera cabe dentro con las dos puertas cerradas y luego cambia al sistema de la escalera y observa cómo esos mismos dos cierres se separan."
+      },
+      "currentDetails": "En el {{frame}}, con la escalera a {{beta}} veces la velocidad de la luz y gamma {{gamma}}, la escalera mide {{ladder}} segundos-luz y el granero {{barn}}. Cabe entre las puertas: {{verdict}}. Los dos cierres de puertas están separados {{gap}} segundos en este sistema.",
+      "controls": {
+        "frame": "Sistema de observación",
+        "frameHelp": "Elige con qué reglas y qué reloj se dibuja la escena. El diagrama de espacio-tiempo de abajo sigue en coordenadas del granero en ambos casos.",
+        "barnFrame": "Sistema del granero",
+        "ladderFrame": "Sistema de la escalera",
+        "velocity": "Velocidad de la escalera",
+        "velocityHelp": "Velocidad de la escalera a través del granero, como fracción de la velocidad de la luz.",
+        "ladderLength": "Longitud de la escalera en reposo",
+        "ladderLengthHelp": "Longitud propia de la escalera, en segundos-luz: su longitud medida en su propio sistema.",
+        "goToEntranceSlam": "Ir al cierre de la puerta de entrada",
+        "goToEntranceSlamHelp": "Llevar el reloj al instante en que se cierra la puerta de entrada, según lo fecha este sistema.",
+        "goToExitSlam": "Ir al cierre de la puerta de salida",
+        "goToExitSlamHelp": "Llevar el reloj al instante en que se cierra la puerta de salida, según lo fecha este sistema.",
+        "showWorldSheets": "Hojas de universo",
+        "showWorldSheetsHelp": "Mostrar la banda que barren los dos extremos de cada objeto por el espacio-tiempo.",
+        "showSlice": "El ahora de este sistema",
+        "showSliceHelp": "Mostrar la línea de sucesos que este sistema llama simultáneos, y las dos longitudes medidas a lo largo de ella."
       }
     },
     "twinParadox": {

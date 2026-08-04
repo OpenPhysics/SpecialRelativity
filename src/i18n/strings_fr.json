@@ -3,6 +3,7 @@
   "screens": {
     "lightClock": "Horloge à lumière",
     "spacetime": "Diagramme d'espace-temps",
+    "lengthContraction": "Contraction des longueurs",
     "twinParadox": "Paradoxe des jumeaux",
     "relativisticDoppler": "Doppler relativiste"
   },
@@ -67,6 +68,30 @@
     "showProjections": "Projections des coordonnées",
     "properTime": "Temps propre",
     "properDistance": "Distance propre"
+  },
+  "lengthContraction": {
+    "barnFrame": "Référentiel de la grange",
+    "ladderFrame": "Référentiel de l'échelle",
+    "ladderSpeed": "Vitesse de l'échelle",
+    "ladderProperLength": "Échelle, au repos",
+    "ladderLength": "L'échelle mesure",
+    "barnLength": "La grange mesure",
+    "fitsQuestion": "Tient entre les portes ?",
+    "fits": "Oui",
+    "doesNotFit": "Non",
+    "sceneTime": "Horloge de ce référentiel",
+    "slamGap": "Entre les fermetures",
+    "slamsTogether": "Les deux portes claquent au même instant.",
+    "exitSlamsFirst": "La porte de sortie claque en premier.",
+    "entranceSlamsFirst": "La porte d'entrée claque en premier.",
+    "goToEntranceSlam": "Fermeture entrée",
+    "goToExitSlam": "Fermeture sortie",
+    "showWorldSheets": "Nappes d'univers",
+    "showSlice": "Le « maintenant » de ce référentiel",
+    "barnMeasure": "Grange {{value}} sl",
+    "ladderMeasure": "Échelle {{value}} sl",
+    "verdict": "Les deux fermetures sont séparées par un intervalle du genre espace : aucune des deux réponses n'est fausse.",
+    "takeaway": "Une échelle, une grange, deux référentiels — et leur seul désaccord porte sur les événements qui ont lieu en même temps."
   },
   "twinParadox": {
     "turnaround": "Demi-tour",
@@ -147,6 +172,32 @@
         "boostToSimultaneity": "Passer au référentiel où A et B sont simultanés",
         "boostToSimultaneityHelp": "Amener la vitesse relative à la valeur qui rend les deux événements simultanés, s'il en existe une.",
         "showProjections": "Projections des coordonnées"
+      }
+    },
+    "lengthContraction": {
+      "screenSummary": {
+        "playArea": "La zone de jeu montre une grange munie d'une porte à chaque extrémité et une échelle qui la traverse, tracée avec les règles et l'horloge du référentiel choisi. En dessous, un diagramme d'espace-temps, toujours dans les coordonnées de la grange, porte la bande balayée par chaque objet et les deux fermetures de portes.",
+        "controlArea": "La zone de commande comporte un sélecteur de référentiel, un curseur de vitesse de l'échelle, un curseur de longueur de l'échelle, des boutons qui amènent l'horloge à chaque fermeture de porte, des cases pour les nappes d'univers et la tranche du « maintenant », des commandes de temps et un bouton Tout réinitialiser.",
+        "interactionHint": "Regardez l'échelle tenir à l'intérieur avec les deux portes fermées, puis passez au référentiel de l'échelle et regardez ces deux mêmes fermetures se séparer."
+      },
+      "currentDetails": "Dans le {{frame}}, avec l'échelle à {{beta}} fois la vitesse de la lumière et gamma {{gamma}}, l'échelle mesure {{ladder}} secondes-lumière et la grange {{barn}}. Tient entre les portes : {{verdict}}. Les deux fermetures sont séparées de {{gap}} secondes dans ce référentiel.",
+      "controls": {
+        "frame": "Référentiel d'observation",
+        "frameHelp": "Choisissez les règles et l'horloge avec lesquelles la scène est tracée. Le diagramme d'espace-temps ci-dessous reste dans les coordonnées de la grange dans les deux cas.",
+        "barnFrame": "Référentiel de la grange",
+        "ladderFrame": "Référentiel de l'échelle",
+        "velocity": "Vitesse de l'échelle",
+        "velocityHelp": "Vitesse de l'échelle à travers la grange, en fraction de la vitesse de la lumière.",
+        "ladderLength": "Longueur de l'échelle au repos",
+        "ladderLengthHelp": "Longueur propre de l'échelle, en secondes-lumière — sa longueur mesurée dans son propre référentiel.",
+        "goToEntranceSlam": "Aller à la fermeture de la porte d'entrée",
+        "goToEntranceSlamHelp": "Amener l'horloge à l'instant où la porte d'entrée claque, tel que ce référentiel le date.",
+        "goToExitSlam": "Aller à la fermeture de la porte de sortie",
+        "goToExitSlamHelp": "Amener l'horloge à l'instant où la porte de sortie claque, tel que ce référentiel le date.",
+        "showWorldSheets": "Nappes d'univers",
+        "showWorldSheetsHelp": "Montrer la bande que les deux extrémités de chaque objet balaient dans l'espace-temps.",
+        "showSlice": "Le maintenant de ce référentiel",
+        "showSliceHelp": "Montrer la ligne des événements que ce référentiel dit simultanés, et les deux longueurs mesurées le long d'elle."
       }
     },
     "twinParadox": {

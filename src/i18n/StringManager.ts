@@ -79,12 +79,14 @@ export class StringManager {
   public getScreenNames(): {
     readonly lightClockStringProperty: ReadOnlyProperty<string>;
     readonly spacetimeStringProperty: ReadOnlyProperty<string>;
+    readonly lengthContractionStringProperty: ReadOnlyProperty<string>;
     readonly twinParadoxStringProperty: ReadOnlyProperty<string>;
     readonly relativisticDopplerStringProperty: ReadOnlyProperty<string>;
   } {
     return {
       lightClockStringProperty: stringProperties.screens.lightClockStringProperty,
       spacetimeStringProperty: stringProperties.screens.spacetimeStringProperty,
+      lengthContractionStringProperty: stringProperties.screens.lengthContractionStringProperty,
       twinParadoxStringProperty: stringProperties.screens.twinParadoxStringProperty,
       relativisticDopplerStringProperty: stringProperties.screens.relativisticDopplerStringProperty,
     };
@@ -110,6 +112,11 @@ export class StringManager {
     return stringProperties.spacetime;
   }
 
+  /** Visible labels for the Length Contraction screen. */
+  public getLengthContractionStrings() {
+    return stringProperties.lengthContraction;
+  }
+
   /** Visible labels for the Twin Paradox screen. */
   public getTwinParadoxStrings() {
     return stringProperties.twinParadox;
@@ -128,6 +135,11 @@ export class StringManager {
   /** Accessibility strings for the Spacetime Diagram screen. */
   public getSpacetimeDiagramA11yStrings() {
     return stringProperties.a11y.spacetime;
+  }
+
+  /** Accessibility strings for the Length Contraction screen. */
+  public getLengthContractionA11yStrings() {
+    return stringProperties.a11y.lengthContraction;
   }
 
   /** Accessibility strings for the Twin Paradox screen. */
