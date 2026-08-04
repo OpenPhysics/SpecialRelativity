@@ -3,6 +3,7 @@
   "screens": {
     "lightClock": "Light Clock",
     "spacetime": "Spacetime Diagram",
+    "lengthContraction": "Length Contraction",
     "twinParadox": "Twin Paradox",
     "relativisticDoppler": "Relativistic Doppler"
   },
@@ -67,6 +68,30 @@
     "showProjections": "Coordinate projections",
     "properTime": "Proper time",
     "properDistance": "Proper distance"
+  },
+  "lengthContraction": {
+    "barnFrame": "Barn frame",
+    "ladderFrame": "Ladder frame",
+    "ladderSpeed": "Ladder speed",
+    "ladderProperLength": "Ladder, at rest",
+    "ladderLength": "Ladder measures",
+    "barnLength": "Barn measures",
+    "fitsQuestion": "Fits between the doors?",
+    "fits": "Yes",
+    "doesNotFit": "No",
+    "sceneTime": "Clock in this frame",
+    "slamGap": "Between the slams",
+    "slamsTogether": "Both doors slam at the same moment.",
+    "exitSlamsFirst": "The exit door slams first.",
+    "entranceSlamsFirst": "The entrance door slams first.",
+    "goToEntranceSlam": "Entrance slam",
+    "goToExitSlam": "Exit slam",
+    "showWorldSheets": "World sheets",
+    "showSlice": "This frame's \"now\"",
+    "barnMeasure": "Barn {{value}} ls",
+    "ladderMeasure": "Ladder {{value}} ls",
+    "verdict": "The two slams are spacelike separated, so no frame's answer is the wrong one.",
+    "takeaway": "One ladder, one barn, two frames — and the only thing they disagree about is which events happen at the same time."
   },
   "twinParadox": {
     "turnaround": "Turn",
@@ -147,6 +172,32 @@
         "boostToSimultaneity": "Boost to the frame where A and B are simultaneous",
         "boostToSimultaneityHelp": "Slide the relative velocity to the value that makes the two events happen at the same time, if one exists.",
         "showProjections": "Coordinate projections"
+      }
+    },
+    "lengthContraction": {
+      "screenSummary": {
+        "playArea": "The play area shows a barn with a door at each end and a ladder flying through it, drawn with the rulers and clock of whichever frame is selected. Below it a spacetime diagram, always in the barn's coordinates, carries the band each object sweeps out and the two door slams.",
+        "controlArea": "The control area has a frame selector, a ladder speed slider, a ladder length slider, buttons that jump the clock to each door slam, world sheet and now-slice checkboxes, time controls, and a Reset All button.",
+        "interactionHint": "Watch the ladder fit inside with both doors shut, then switch to the ladder frame and watch the same two slams come apart."
+      },
+      "currentDetails": "In the {{frame}}, with the ladder at {{beta}} times the speed of light and gamma {{gamma}}, the ladder measures {{ladder}} light-seconds and the barn {{barn}}. Fits between the doors: {{verdict}}. The two door slams are {{gap}} seconds apart in this frame.",
+      "controls": {
+        "frame": "Observation frame",
+        "frameHelp": "Choose whose rulers and clock the scene is drawn with. The spacetime diagram below stays in the barn's coordinates either way.",
+        "barnFrame": "Barn frame",
+        "ladderFrame": "Ladder frame",
+        "velocity": "Ladder speed",
+        "velocityHelp": "Speed of the ladder through the barn, as a fraction of the speed of light.",
+        "ladderLength": "Ladder length at rest",
+        "ladderLengthHelp": "Proper length of the ladder, in light-seconds — its length measured in its own frame.",
+        "goToEntranceSlam": "Go to the entrance door slam",
+        "goToEntranceSlamHelp": "Take the clock to the instant the entrance door slams, as this frame times it.",
+        "goToExitSlam": "Go to the exit door slam",
+        "goToExitSlamHelp": "Take the clock to the instant the exit door slams, as this frame times it.",
+        "showWorldSheets": "World sheets",
+        "showWorldSheetsHelp": "Show the band each object's two ends sweep out through spacetime.",
+        "showSlice": "This frame's now",
+        "showSliceHelp": "Show the line of events this frame calls simultaneous, and the two lengths measured along it."
       }
     },
     "twinParadox": {

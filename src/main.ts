@@ -22,6 +22,7 @@ import "./brand.js";
 import { onReadyToLaunch, PreferencesModel, Sim } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { StringManager } from "./i18n/StringManager.js";
+import { LengthContractionScreen } from "./length-contraction/LengthContractionScreen.js";
 import { LightClockScreen } from "./light-clock/LightClockScreen.js";
 import { SpecialRelativityPreferencesModel } from "./preferences/SpecialRelativityPreferencesModel.js";
 import { SpecialRelativityPreferencesNode } from "./preferences/SpecialRelativityPreferencesNode.js";
@@ -45,6 +46,13 @@ onReadyToLaunch(() => {
     new SpacetimeDiagramScreen(simPreferences, {
       name: stringManager.getScreenNames().spacetimeStringProperty,
       tandem: Tandem.ROOT.createTandem("spacetimeScreen"),
+      backgroundColorProperty: SpecialRelativityColors.backgroundColorProperty,
+    }),
+    // Third of five: the ladder-and-barn puzzle is resolved by relativity of
+    // simultaneity, so it follows the screen that introduces it.
+    new LengthContractionScreen(simPreferences, {
+      name: stringManager.getScreenNames().lengthContractionStringProperty,
+      tandem: Tandem.ROOT.createTandem("lengthContractionScreen"),
       backgroundColorProperty: SpecialRelativityColors.backgroundColorProperty,
     }),
     new TwinParadoxScreen(simPreferences, {

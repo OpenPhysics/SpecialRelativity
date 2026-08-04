@@ -17,7 +17,9 @@
  *   yellow         light itself — the light cone, photons, wavefronts
  *   violet         invariant hyperbolas: the structure every frame agrees on
  *   green          proper time — the travelling twin's clock, the moving clock
- *   orange / red   the draggable events A and B, and the turnaround
+ *   orange / red   the draggable events A and B, the turnaround, the door slams
+ *   slate          apparatus at rest in the lab — mirrors, the barn
+ *   amber          the ladder: the object that is moving, and being contracted
  *
  * A student who learns "cyan means the other observer" on the Spacetime Diagram
  * screen should not have to relearn it on the Twin Paradox screen.
@@ -199,10 +201,36 @@ const SpecialRelativityColors = {
     projector: "#bdbdbd",
   }),
 
-  /** Apparatus: light-clock mirrors and their supporting frame. */
+  /** Apparatus: light-clock mirrors and their supporting frame, and the barn. */
   apparatusColorProperty: new ProfileColorProperty(SpecialRelativityNamespace, "apparatus", {
     default: "#90a4ae",
     projector: "#546e7a",
+  }),
+
+  /**
+   * The ladder on the Length Contraction screen — the object that is moving, and
+   * the one whose measured length is in dispute. Amber rather than one of the
+   * event colours because it is a thing rather than an event, and distinct from
+   * the barn's slate so "which of these two is contracted?" is answered by hue.
+   */
+  ladderColorProperty: new ProfileColorProperty(SpecialRelativityNamespace, "ladder", {
+    default: "#ffb74d",
+    projector: "#e65100",
+  }),
+
+  /**
+   * Fills of the two world-sheets on the Length Contraction diagram: the band each
+   * object's ends sweep out through spacetime. Deliberately faint — they are the
+   * region the slices are read against, not figures in their own right.
+   */
+  ladderSheetFillColorProperty: new ProfileColorProperty(SpecialRelativityNamespace, "ladderSheetFill", {
+    default: "rgba(255,183,77,0.16)",
+    projector: "rgba(230,81,0,0.13)",
+  }),
+
+  barnSheetFillColorProperty: new ProfileColorProperty(SpecialRelativityNamespace, "barnSheetFill", {
+    default: "rgba(144,164,174,0.15)",
+    projector: "rgba(84,110,122,0.13)",
   }),
 
   /**

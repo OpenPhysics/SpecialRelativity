@@ -10,7 +10,7 @@ import type { PhetioProperty, TReadOnlyProperty } from "scenerystack/axon";
 import { Dimension2, type Range } from "scenerystack/dot";
 import { HBox, type Node, Text, type TPaint } from "scenerystack/scenery";
 import { NumberControl } from "scenerystack/scenery-phet";
-import { Checkbox, RectangularPushButton } from "scenerystack/sun";
+import { Checkbox, RectangularPushButton, VerticalAquaRadioButtonGroup } from "scenerystack/sun";
 import SpecialRelativityColors from "../../SpecialRelativityColors.js";
 import { FONTS } from "../../SpecialRelativityConstants.js";
 import { FLAT_RECTANGULAR_BUTTON_OPTIONS, LIGHT_SURFACE_TEXT_FILL } from "../SpecialRelativityButtonOptions.js";
@@ -96,16 +96,21 @@ export const createCheckbox = (
   );
 
 /**
- * A themed flat push button carrying a text label. The two "boost to …" buttons
- * on the Spacetime Diagram screen are the only ones in the sim, and they are a
- * matched pair, so they are built by one factory rather than configured twice.
+ * A themed flat push button carrying a text label. The "boost to …" pair on the
+ * Spacetime Diagram screen and the "go to this slam" pair on the Length
+ * Contraction screen are built by this one factory rather than configured four
+ * times.
+ *
+ * `enabledProperty` is optional: the boost buttons grey each other out because
+ * exactly one of them is reachable at a time, but a button that is always
+ * available should not have to invent an always-true Property to say so.
  */
 export const createPushButton = (
   labelProperty: TReadOnlyProperty<string>,
   config: {
     accessibleName: TReadOnlyProperty<string>;
     accessibleHelpText: TReadOnlyProperty<string>;
-    enabledProperty: TReadOnlyProperty<boolean>;
+    enabledProperty?: TReadOnlyProperty<boolean>;
     listener: () => void;
     maxTextWidth?: number;
   },
@@ -118,11 +123,55 @@ export const createPushButton = (
       maxWidth: config.maxTextWidth ?? CONTROL_WIDTH - 24,
     }),
     baseColor: SpecialRelativityColors.controlSurfaceColorProperty,
-    enabledProperty: config.enabledProperty,
+    // Spread rather than assign: `exactOptionalPropertyTypes` rejects an explicit
+    // undefined, and "always enabled" must mean "absent".
+    ...(config.enabledProperty ? { enabledProperty: config.enabledProperty } : {}),
     listener: config.listener,
     accessibleName: config.accessibleName,
     accessibleHelpText: config.accessibleHelpText,
   });
+
+/**
+ * A themed vertical group of radio buttons — the control for a choice between
+ * named alternatives rather than a value on a scale.
+ *
+ * The Length Contraction screen's frame selector is the sim's only one, and it is
+ * a radio group rather than a checkbox or a switch on purpose: "barn frame" and
+ * "ladder frame" are two peers, and neither is the off state of the other.
+ */
+export const createRadioButtonGroup = <T>(
+  property: PhetioProperty<T>,
+  items: readonly { value: T; labelProperty: TReadOnlyProperty<string>; accessibleName: TReadOnlyProperty<string> }[],
+  config: {
+    accessibleName: TReadOnlyProperty<string>;
+    accessibleHelpText: TReadOnlyProperty<string>;
+    width?: number;
+  },
+): VerticalAquaRadioButtonGroup<T> =>
+  new VerticalAquaRadioButtonGroup<T>(
+    property,
+    items.map((item) => ({
+      value: item.value,
+      createNode: () =>
+        new Text(item.labelProperty, {
+          font: FONTS.READOUT,
+          fill: SpecialRelativityColors.textColorProperty,
+          maxWidth: (config.width ?? CONTROL_WIDTH) - 40,
+        }),
+      options: { accessibleName: item.accessibleName },
+    })),
+    {
+      spacing: 7,
+      align: "left",
+      radioButtonOptions: {
+        selectedColor: SpecialRelativityColors.accentColorProperty,
+        deselectedColor: SpecialRelativityColors.controlSurfaceColorProperty,
+        stroke: SpecialRelativityColors.diagramAxisColorProperty,
+      },
+      accessibleName: config.accessibleName,
+      accessibleHelpText: config.accessibleHelpText,
+    },
+  );
 
 /**
  * A "label ......... value" row. The label and value are pushed to opposite ends

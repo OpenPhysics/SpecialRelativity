@@ -27,6 +27,7 @@ src/
       controlHelpers.ts, chartUtils.ts
   light-clock/          model/{LightClockModel,lightClockGeometry}  view/…
   spacetime/            model/SpacetimeDiagramModel                 view/…
+  length-contraction/   model/{LengthContractionModel,ladderBarnGeometry} view/…
   twin-paradox/         model/{TwinParadoxModel,twinJourney}        view/…
   relativistic-doppler/ model/{RelativisticDopplerModel,dopplerGeometry} view/…
 tests/                  one file per pure module, plus memory-leak
@@ -36,11 +37,12 @@ tests/                  one file per pure module, plus memory-leak
 
 ### Pure functional physics, Property layers on top
 
-`lorentz.ts`, `lightClockGeometry.ts`, `twinJourney.ts` and `dopplerGeometry.ts` are plain functions
+`lorentz.ts`, `lightClockGeometry.ts`, `ladderBarnGeometry.ts`, `twinJourney.ts` and
+`dopplerGeometry.ts` are plain functions
 of plain numbers and `Vector2`s. They import from `scenerystack/dot` and nothing else — no axon, no
 scenery. Everything reactive lives in the model classes that wrap them.
 
-This is what makes the physics testable without SceneryStack, and it is where all 100 unit tests
+This is what makes the physics testable without SceneryStack, and it is where all 151 unit tests
 point. It follows `CarnotHeatEngine/src/common/model/carnotCycleGeometry.ts`.
 
 ### Everything animated is a closed form of elapsed time
@@ -138,6 +140,38 @@ mouse would never see them:
 Both default to **zero** in the pure functions, so the tests check exact behaviour; only the model
 layer passes a positive value. Do not push the tolerance into `lorentz.ts`.
 
+### The Length Contraction screen has one clock, read by two frames
+
+`LengthContractionModel.sceneTimeProperty` is a single number, interpreted as barn time `ct` or as
+ladder time `ct′` depending on which frame is selected. That is not a shortcut. Both frames' clocks
+are zeroed on one event — the ladder's centre passing the barn's centre — so there is exactly one
+instant they can label the same, and it is the one the clock is zeroed on. Flipping the frame toggle
+without touching the clock is then a meaningful operation, and it is the operation the screen exists
+to offer: the number stays put and the scene rearranges itself around it.
+
+The clock wraps rather than scrubs. Its window, `sceneHalfWindow()`, is derived from the setup and
+the frame, and at high β in the ladder frame it is set by the *slams* (γβB apart) rather than by the
+fly-past — so a fixed-range slider would have had a useful travel of a few percent of its track. Two
+push buttons take the clock straight to each slam instead, which is also the better teaching control:
+in the barn frame both buttons land on the same instant, and that is the whole content of "the doors
+are on one switch".
+
+`advance()` uses a modulo rather than a comparison against the ends, so a large `dt` after a
+background tab regains focus lands in the right place instead of skipping the window.
+
+### The Length Contraction diagram never changes frames
+
+The stage is drawn in the selected frame; the spacetime diagram is always in barn-frame coordinates,
+and the toggle changes exactly one thing on it — the tilt of the simultaneity slice. `betaProperty`
+for the shear is therefore *not* the model's β but a DerivedProperty that is β in the ladder frame and
+0 in the barn frame, because in the barn frame the primed mesh would be the unprimed mesh already
+drawn.
+
+That split is the argument the screen makes, and it is why `ladderSliceInLab()` returns **barn-frame**
+events for a measurement taken in either frame: a length is two ends at one instant, and the ladder
+frame's pair of ends lands on the diagram as a tilted segment. Its being shorter against the barn's
+upright strip is the disagreement drawn rather than asserted.
+
 ### The Twin Paradox screen has no `SpecialRelativityModel`
 
 Its β is *derived* from the turn's position, not chosen. A trip is specified by where and when you
@@ -202,7 +236,7 @@ is more than one flat list keeps legible. This is a documented variation on the 
 ## Testing
 
 `npm test` runs Vitest over `tests/`, environment `happy-dom`, with `--expose-gc` for the memory-leak
-suite. 129 tests across six files.
+suite. 151 tests across seven files.
 
 The house style is three layers per physics module:
 

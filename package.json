@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Explore special relativity across four screens: a moving light clock, an interactive Minkowski spacetime diagram, the twin paradox, and the relativistic Doppler effect.",
+  "description": "Explore special relativity across five screens: a moving light clock, an interactive Minkowski spacetime diagram, the ladder-and-barn length contraction paradox, the twin paradox, and the relativistic Doppler effect.",
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",

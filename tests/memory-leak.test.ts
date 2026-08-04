@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { SpecialRelativityModel } from "../src/common/model/SpecialRelativityModel.js";
 import { TimeModel } from "../src/common/TimeModel.js";
+import { LengthContractionModel } from "../src/length-contraction/model/LengthContractionModel.js";
 import { LightClockModel } from "../src/light-clock/model/LightClockModel.js";
 import { RelativisticDopplerModel } from "../src/relativistic-doppler/model/RelativisticDopplerModel.js";
 import { SpacetimeDiagramModel } from "../src/spacetime/model/SpacetimeDiagramModel.js";
@@ -71,6 +72,15 @@ const DISPOSABLE_MODELS: { readonly name: string; readonly createAndDispose: () 
     name: "SpacetimeDiagramModel",
     createAndDispose: () => {
       const model = new SpacetimeDiagramModel();
+      const ref = new WeakRef<object>(model);
+      model.dispose();
+      return ref;
+    },
+  },
+  {
+    name: "LengthContractionModel",
+    createAndDispose: () => {
+      const model = new LengthContractionModel();
       const ref = new WeakRef<object>(model);
       model.dispose();
       return ref;
