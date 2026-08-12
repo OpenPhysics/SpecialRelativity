@@ -1,5 +1,7 @@
 # Special Relativity
 
+[![CI](https://github.com/OpenPhysics/SpecialRelativity/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenPhysics/SpecialRelativity/actions/workflows/ci.yml)
+
 An interactive simulation of flat-spacetime relativity — a moving light clock, a live Minkowski
 diagram, the ladder-and-barn paradox, the twin paradox, and the relativistic Doppler effect — built
 with
