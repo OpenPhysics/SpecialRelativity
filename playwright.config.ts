@@ -1,5 +1,5 @@
 /**
- * Playwright configuration for optional fuzz testing (Template smoke).
+ * Playwright configuration for optional fuzz testing (SpecialRelativity smoke).
  */
 
 import { defineConfig } from "@playwright/test";
