@@ -89,8 +89,8 @@ export const createCheckbox = (
       maxWidth: width - 30,
     }),
     {
-      checkboxColor: SpecialRelativityColors.diagramAxisColorProperty,
-      checkboxColorBackground: SpecialRelativityColors.controlSurfaceColorProperty,
+      checkboxColor: SpecialRelativityColors.textColorProperty,
+      checkboxColorBackground: SpecialRelativityColors.panelBackgroundColorProperty,
       accessibleName,
     },
   );
