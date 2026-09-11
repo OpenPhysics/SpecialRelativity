@@ -1,6 +1,6 @@
 # CLAUDE.md — Special Relativity
 
-Sim-specific context for AI assistants. General SceneryStack guidance: [OpenPhysics/.github/CLAUDE.md](https://github.com/OpenPhysics/.github/blob/main/CLAUDE.md).
+Sim-specific context for AI assistants. General SceneryStack guidance: [OpenLyceum/.github/CLAUDE.md](https://github.com/OpenLyceum/.github/blob/main/CLAUDE.md).
 
 ## Project
 
@@ -101,7 +101,7 @@ with a **live** `currentDetailsContent`, a wrapper `Node` carrying `pdomOrder` (
 
 Live summary text is deliberately coarse — tick counts rather than clock readings, values rounded to
 one or two decimals — because a paragraph that changes every frame cannot be read by a screen reader.
-Full convention: [Baton/ACCESSIBILITY.md](https://github.com/OpenPhysics/Baton/blob/main/ACCESSIBILITY.md).
+Full convention: [Baton/ACCESSIBILITY.md](https://github.com/OpenLyceum/Baton/blob/main/ACCESSIBILITY.md).
 
 ## Compliance carve-outs
 
